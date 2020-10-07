@@ -16,9 +16,12 @@ console.log("Server Started")
 
 var SOCKET_LIST = {};
 var PLAYER_LIST = {};
+let Users = [];
 
 var Player = function(id){
     var self = {
+        user:"",
+        pass:"",
         x:250,
         y:250,
         id:id,
@@ -46,6 +49,16 @@ var Player = function(id){
 
 var io = require('socket.io') (serv, {})
 io.sockets.on('connection', function(socket) {
+    socket.on('signUp', function(data){
+        let userExists = false;
+        Users.forEach(function(u){
+            if (data.Usr == u.Usr){}
+        })
+    })
+    socket.on('signIn', function(data){
+
+    })
+    
     socket.id = Math.random()
     SOCKET_LIST[socket.id] = socket;
 
@@ -68,6 +81,19 @@ io.sockets.on('connection', function(socket) {
             player.pressDown = data.state
         }
     })
+
+    socket.on('msgServ', function(data){
+        let playerName = socket.id
+        for (let i in SOCKET_LIST) {
+            SOCKET_LIST[i].emit('addToChat', playerName+": " +data)
+        }
+    })
+    socket.on('evalServ', function(data) {
+        let ans = eval(data)
+        socket.emit('evalAns', ans)
+    })
+
+    
 })
 
 setInterval(function() {

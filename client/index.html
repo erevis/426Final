@@ -1,15 +1,59 @@
-<canvas id ="canv" width="500" height ="500" style="border:1px solid #000000;"></canvas>>
+<div id="login">
+    Username: <input id="inputUser" type="text"> </input> <br>
+    Password: <input id="inputPass" type = text> </input>
+    <button id="signIn"> Sign In </button>
+    <button id="signUp"> Sign Up </button>>
+</div> 
+
+<div id="game">
+    <canvas id ="canv" width="500" height ="500" style="border:1px solid #000000;"></canvas>>
+
+    <div id="chatText" style="width:500px;height:100px;overflow-y:scroll;">  </div>
+    <form id = "chatForm">
+        <input id="chatInput" type="text" style="width:500px"></input> 
+    </form>  
+</div>
 
 <script src= "https://cdn.socket.io/socket.io-1.4.5.js">
 </script>
 
 <script>
+    var socket = io();
+    
+    let user = document.getElementById("inputUser")
+    let pass = document.getElementById("inputPass")  
+    let signIn = document.getElementById("signIn")
+    let signUp = document.getElementById("signUp")
+    signIn.onclick = function(e){
+        socket.emit('signIn', {Usr:user, Pas:pass})
+    }
+    signUp.onclick = function(e){
+        socket.emit('signUp', {Usr:user, Pas:pass})
+    }
+    socket.on('loginSucc')
+    socket.on('loginFail')
+    
     var canv = document.getElementById("canv").getContext("2d")
     canv.font = '30px Arial'
-    var socket = io();
 
-
-    
+    let chatText = document.getElementById("chatText")
+    let chatInput = document.getElementById("chatInput")
+    let chatForm = document.getElementById("chatForm") 
+    socket.on('addToChat', function(data){
+        chatText.innerHTML += '<div>' + data + '</div>'
+    })
+    socket.on('evalAns', function(data){
+        console.log(data)
+    }) 
+    chatForm.onsubmit = function(event) {
+        event.preventDefault()
+        if (chatInput.value[0] === '.') {
+            socket.emit('evalServ', chatInput.value.slice(1))
+        } else {
+            socket.emit('msgServ', chatInput.value)
+        }
+    }
+       
     socket.on('newPostions', function(data){
         canv.clearRect(0,0,500,500)
         for (var i = 0; i < data.length;i++){
