@@ -1,8 +1,13 @@
+// Uses socket.io to send and recieve information(packages) between client and server
+// Use socket.emit() and socket.on() to send the 
+
+//Setting Up NodeJS 
 const e = require('express');
 var express = require('express');
 const { dirname } = require('path');
 var app = express()
 var serv = require('http').Server(app);
+const hostname = 'tarheels.live/nwillengame/'
 
 app.get('/', function(req, res) {
     res.sendFile(__dirname + '/client/index.html')
@@ -10,7 +15,7 @@ app.get('/', function(req, res) {
 
 app.use('/client', express.static(__dirname + '/client'))
 
-serv.listen(2000);
+serv.listen(2000, hostname);
 console.log("Server Started")
 
 
