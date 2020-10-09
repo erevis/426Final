@@ -16,7 +16,7 @@ console.log("Server Started")
 
 var SOCKET_LIST = {};
 var PLAYER_LIST = {};
-let Users = [];
+let Users = {}
 
 var Player = function(id){
     var self = {
@@ -49,21 +49,33 @@ var Player = function(id){
 
 var io = require('socket.io') (serv, {})
 io.sockets.on('connection', function(socket) {
-    socket.on('signUp', function(data){
-        let userExists = false;
-        Users.forEach(function(u){
-            if (data.Usr == u.Usr){}
-        })
-    })
-    socket.on('signIn', function(data){
 
-    })
     
     socket.id = Math.random()
     SOCKET_LIST[socket.id] = socket;
-
     var player = Player(socket.id)
     PLAYER_LIST[socket.id] = player;
+
+    socket.on('signIn', function(data){
+        if (Users[data.Usr] === data.Pas) {
+            socket.emit('signInRes', {result:true})
+            player.user = data.Usr
+            player.pass = data.Pas
+        } else {
+            socket.emit('signInRes', {result:false})
+        }
+    })
+
+    socket.on('signUp', function(data){
+        if (Users[data.Usr]){
+            socket.emit('signUpRes', {success:false})
+            player.user = data.Usr
+            player.pass = data.Pas
+        } else {
+            Users[data.Usr] = data.Pas
+            socket.emit('signUpRes', {success:true})
+        }
+    }) 
 
     socket.on('disconnect',function() {
         delete SOCKET_LIST[socket.id]
@@ -83,7 +95,7 @@ io.sockets.on('connection', function(socket) {
     })
 
     socket.on('msgServ', function(data){
-        let playerName = socket.id
+        let playerName = player.user
         for (let i in SOCKET_LIST) {
             SOCKET_LIST[i].emit('addToChat', playerName+": " +data)
         }
@@ -104,7 +116,7 @@ setInterval(function() {
         package.push({
             x:player.x,
             y:player.y,
-            number:player.number
+            name:player.user
         })  
     }
     for (var i in SOCKET_LIST) {

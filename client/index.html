@@ -5,8 +5,8 @@
     <button id="signUp"> Sign Up </button>>
 </div> 
 
-<div id="game">
-    <canvas id ="canv" width="500" height ="500" style="border:1px solid #000000;"></canvas>>
+<div id="game" style="display:none">
+    <canvas id ="canv" width="500" height ="500" style="border:1px solid #000000;"></canvas>
 
     <div id="chatText" style="width:500px;height:100px;overflow-y:scroll;">  </div>
     <form id = "chatForm">
@@ -20,26 +20,41 @@
 <script>
     var socket = io();
     
+    let login = document.getElementById("login")
+    let game = document.getElementById("game")
     let user = document.getElementById("inputUser")
     let pass = document.getElementById("inputPass")  
     let signIn = document.getElementById("signIn")
     let signUp = document.getElementById("signUp")
-    signIn.onclick = function(e){
-        socket.emit('signIn', {Usr:user, Pas:pass})
+    signIn.onclick = function(){
+        socket.emit('signIn', {Usr:user.value, Pas:pass.value})
     }
     signUp.onclick = function(e){
-        socket.emit('signUp', {Usr:user, Pas:pass})
+        socket.emit('signUp', {Usr:user.value, Pas:pass.value})
     }
-    socket.on('loginSucc')
-    socket.on('loginFail')
+    socket.on('signInRes', function(data) {
+        if (data.result) {
+            login.style.display = "none"
+            game.style.display = "inline-block"
+        }
+    })
+
+    socket.on('signUpRes', function(data){
+        if (data.result){
+            login.style.display = "none"
+            game.style.display = "inline-block"
+        }
+    })
+    
     
     var canv = document.getElementById("canv").getContext("2d")
-    canv.font = '30px Arial'
+    canv.font = '20px Arial'
 
     let chatText = document.getElementById("chatText")
     let chatInput = document.getElementById("chatInput")
     let chatForm = document.getElementById("chatForm") 
     socket.on('addToChat', function(data){
+        chatInput.value = ""
         chatText.innerHTML += '<div>' + data + '</div>'
     })
     socket.on('evalAns', function(data){
@@ -57,7 +72,7 @@
     socket.on('newPostions', function(data){
         canv.clearRect(0,0,500,500)
         for (var i = 0; i < data.length;i++){
-            canv.fillText(data[i].number, data[i].x, data[i].y)
+            canv.fillText(data[i].name, data[i].x, data[i].y)
         }
     })
 
