@@ -16,12 +16,11 @@ app.get('/', function(req, res) {
 app.use('/client', express.static(__dirname + '/client'))
 
 serv.listen(process.env.PORT || 2000);
-console.log("Server Started")
-
+console.log("Server Started at localhost:2000")
 
 var SOCKET_LIST = {};
 var PLAYER_LIST = {};
-let Users = {}
+let Users = {};
 
 var Player = function(id){
     var self = {
@@ -131,9 +130,9 @@ setInterval(function() {
         })  
     }
     for (var i in SOCKET_LIST) {
-        var socket= SOCKET_LIST[i]
+        var socket = SOCKET_LIST[i]
         socket.emit('newPostions', package)
     }
 
-}, 1000/25)
+}, 40)
 
