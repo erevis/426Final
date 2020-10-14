@@ -25,18 +25,23 @@
     <script>
         var socket = io();
         
+        // The Sign-In Page Elements
         let login = document.getElementById("login")
         let game = document.getElementById("game")
         let user = document.getElementById("inputUser")
         let pass = document.getElementById("inputPass")  
         let signIn = document.getElementById("signIn")
         let signUp = document.getElementById("signUp")
+
+        // Send Username and Password to the Server for signing up and signing in
         signIn.onclick = function(){
             socket.emit('signIn', {Usr:user.value, Pas:pass.value})
         }
         signUp.onclick = function(e){
             socket.emit('signUp', {Usr:user.value, Pas:pass.value})
         }
+
+        // If the user and pass are correct then show game page, else do nothing
         socket.on('signInRes', function(data) {
             if (data.result) {
                 login.style.display = "none"
@@ -51,6 +56,7 @@
             }
         })
         
+        // Game Page Elements
         var canvas = document.getElementById("canv")
         var ctx = canvas.getContext("2d")
         ctx.font = '20px Arial'
@@ -62,13 +68,17 @@
         let chatText = document.getElementById("chatText")
         let chatInput = document.getElementById("chatInput")
         let chatForm = document.getElementById("chatForm") 
+
+        // When the server tells the client to add message, client adds to the chat and and clears the chat box
         socket.on('addToChat', function(color, data){
             chatInput.value = ""
             chatText.innerHTML += '<div style="opacity:.8; background-color: ' + color + '">' + data + '</div>'
         })
+        // Used to print out for debugging 
         socket.on('evalAns', function(data){
             console.log(data)
         }) 
+        // Start chat messages with '.' to evalate something. Ex: .Users would result in printing the Users online
         chatForm.onsubmit = function(event) {
             event.preventDefault()
             if (chatInput.value[0] === '.') {
@@ -77,7 +87,7 @@
                 socket.emit('msgServ', chatInput.value)
             }
         }
-        
+        //When the server sends new positions to the client, it will repaint the canvas with new positions
         socket.on('newPostions', function(data){
             ctx.clearRect(0,0,canvas.width,canvas.height)
             for (var i = 0; i < data.length;i++){
@@ -93,7 +103,8 @@
 
             }
         })
-
+      
+        //Tell server when someone presses WASD
         document.onkeydown = function(event){
             if (event.keyCode == 68) { 
                 socket.emit('keyPress', {InputId:'right', state:true})

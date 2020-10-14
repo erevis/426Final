@@ -1,8 +1,13 @@
+// Uses socket.io to send and recieve information(packages) between client and server
+// Use socket.emit() and socket.on() to send the 
+
+//Setting Up NodeJS 
 const e = require('express');
 var express = require('express');
 const { dirname } = require('path');
 var app = express()
 var serv = require('http').Server(app);
+const hostname = 'tarheels.live/nwillengame/'
 
 app.get('/', function(req, res) {
     res.sendFile(__dirname + '/client/index.html')
@@ -10,9 +15,8 @@ app.get('/', function(req, res) {
 
 app.use('/client', express.static(__dirname + '/client'))
 
-serv.listen(2000);
+serv.listen(process.env.PORT || 2000);
 console.log("Server Started at localhost:2000")
-
 
 var SOCKET_LIST = {};
 var PLAYER_LIST = {};
@@ -39,11 +43,14 @@ var Player = function(id){
     self.move = function(){
         if (self.pressRight) {
             self.x+= self.spd
-        } else if (self.pressLeft) {
+        }
+        if (self.pressLeft) {
             self.x-= self.spd
-        } else if (self.pressDown) {
+        }
+        if (self.pressDown) {
             self.y -= self.spd
-        } else if (self.pressUp) {
+        }
+        if (self.pressUp) {
             self.y += self.spd
         }
     }
@@ -90,11 +97,14 @@ io.sockets.on('connection', function(socket) {
     socket.on('keyPress', function(data){
         if (data.InputId == "right") {
             player.pressRight = data.state
-        } else if (data.InputId == "left") {
+        }
+        if (data.InputId == "left") {
             player.pressLeft = data.state
-        } else if (data.InputId == "up") {
+        }
+        if (data.InputId == "up") {
             player.pressUp = data.state
-        } else if (data.InputId == "down") {
+        }
+        if (data.InputId == "down") {
             player.pressDown = data.state
         }
     })
