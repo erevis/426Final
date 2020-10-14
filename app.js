@@ -22,12 +22,15 @@ var SOCKET_LIST = {};
 var PLAYER_LIST = {};
 let Users = {};
 
+//let canvas = document.getElementById("canv")
+
 var Player = function(id){
     var self = {
         user:"",
         pass:"",
         x:250,
         y:250,
+        color:"",
         id:id,
         number: "" +Math.floor(10*Math.random()),
         pressRight:false,
@@ -66,8 +69,10 @@ io.sockets.on('connection', function(socket) {
     socket.on('signIn', function(data){
         if (Users[data.Usr] === data.Pas) {
             socket.emit('signInRes', {result:true})
-            player.user = data.Usr
-            player.pass = data.Pas
+            player.user = data.Usr;
+            player.pass = data.Pas;
+            player.color = getRandomColor();
+            console.log(player.color)
         } else {
             socket.emit('signInRes', {result:false})
         }
@@ -106,17 +111,27 @@ io.sockets.on('connection', function(socket) {
 
     socket.on('msgServ', function(data){
         let playerName = player.user
+        let playerColor = player.color
         for (let i in SOCKET_LIST) {
-            SOCKET_LIST[i].emit('addToChat', playerName+": " +data)
+            SOCKET_LIST[i].emit('addToChat', playerColor, playerName+": " +data)
         }
     })
     socket.on('evalServ', function(data) {
         let ans = eval(data)
         socket.emit('evalAns', ans)
-    })
+    })  
 
     
 })
+
+function getRandomColor() {
+    var letters = '0123456789ABCDEF';
+    var color = '#';
+    for (var i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+}
 
 setInterval(function() {
     var package = []
@@ -126,7 +141,8 @@ setInterval(function() {
         package.push({
             x:player.x,
             y:player.y,
-            name:player.user
+            name:player.user,
+            color:player.color
         })  
     }
     for (var i in SOCKET_LIST) {
@@ -134,5 +150,5 @@ setInterval(function() {
         socket.emit('newPostions', package)
     }
 
-}, 40)
+}, 20)
 
