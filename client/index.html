@@ -1,101 +1,120 @@
-<div id="login">
-    Username: <input id="inputUser" type="text"> </input> <br>
-    Password: <input id="inputPass" type = text> </input>
-    <button id="signIn"> Sign In </button>
-    <button id="signUp"> Sign Up </button>>
-</div> 
+<head>
+    <link rel="stylesheet" href="style.css">
+    <title></title>
+</head>
+<body>
+    <div id="login">
+        Username: <input id="inputUser" type="text"> </input> <br>
+        Password: <input id="inputPass" type = text> </input>
+        <button id="signIn"> Sign In </button>
+        <button id="signUp"> Sign Up </button>>
+    </div> 
 
-<div id="game" style="display:none">
-    <canvas id ="canv" width="500" height ="500" style="border:1px solid #000000; cursor: none"></canvas>
+    <div id="game" style="display:none">
+        <canvas id ="canv" style='border:1px solid #000000; cursor: none;'></canvas>
 
-    <div id="chatText" style="width:500px;height:100px;overflow-y:scroll;">  </div>
-    <form id = "chatForm">
-        <input id="chatInput" type="text" style="width:500px"></input> 
-    </form>  
-</div>
+        <div id="chatText" style="width:500px;height:100px;overflow-y:scroll;">  </div>
+        <form id = "chatForm">
+            <input id="chatInput" type="text" style="width:500px"></input> 
+        </form>  
+    </div>
 
-<script src= "https://cdn.socket.io/socket.io-1.4.5.js">
-</script>
+    <script src= "https://cdn.socket.io/socket.io-1.4.5.js">
+    </script>
 
-<script>
-    var socket = io();
-    
-    let login = document.getElementById("login")
-    let game = document.getElementById("game")
-    let user = document.getElementById("inputUser")
-    let pass = document.getElementById("inputPass")  
-    let signIn = document.getElementById("signIn")
-    let signUp = document.getElementById("signUp")
-    signIn.onclick = function(){
-        socket.emit('signIn', {Usr:user.value, Pas:pass.value})
-    }
-    signUp.onclick = function(e){
-        socket.emit('signUp', {Usr:user.value, Pas:pass.value})
-    }
-    socket.on('signInRes', function(data) {
-        if (data.result) {
-            login.style.display = "none"
-            game.style.display = "inline-block"
+    <script>
+        var socket = io();
+        
+        let login = document.getElementById("login")
+        let game = document.getElementById("game")
+        let user = document.getElementById("inputUser")
+        let pass = document.getElementById("inputPass")  
+        let signIn = document.getElementById("signIn")
+        let signUp = document.getElementById("signUp")
+        signIn.onclick = function(){
+            socket.emit('signIn', {Usr:user.value, Pas:pass.value})
         }
-    })
+        signUp.onclick = function(e){
+            socket.emit('signUp', {Usr:user.value, Pas:pass.value})
+        }
+        socket.on('signInRes', function(data) {
+            if (data.result) {
+                login.style.display = "none"
+                game.style.display = "inline-block"
+            }
+        })
 
-    socket.on('signUpRes', function(data){
-        if (data.result){
-            login.style.display = "none"
-            game.style.display = "inline-block"
-        }
-    })
-    
-    
-    var canv = document.getElementById("canv").getContext("2d")
-    canv.font = '20px Arial'
+        socket.on('signUpRes', function(data){
+            if (data.result){
+                login.style.display = "none"
+                game.style.display = "inline-block"
+            }
+        })
+        
+        var canvas = document.getElementById("canv")
+        var ctx = canvas.getContext("2d")
+        ctx.font = '20px Arial'
 
-    let chatText = document.getElementById("chatText")
-    let chatInput = document.getElementById("chatInput")
-    let chatForm = document.getElementById("chatForm") 
-    socket.on('addToChat', function(data){
-        chatInput.value = ""
-        chatText.innerHTML += '<div>' + data + '</div>'
-    })
-    socket.on('evalAns', function(data){
-        console.log(data)
-    }) 
-    chatForm.onsubmit = function(event) {
-        event.preventDefault()
-        if (chatInput.value[0] === '.') {
-            socket.emit('evalServ', chatInput.value.slice(1))
-        } else {
-            socket.emit('msgServ', chatInput.value)
-        }
-    }
-       
-    socket.on('newPostions', function(data){
-        canv.clearRect(0,0,500,500)
-        for (var i = 0; i < data.length;i++){
-            canv.fillText(data[i].name, data[i].x, data[i].y)
-        }
-    })
+        // set canvas size
+        canvas.width  = window.innerWidth * .8;
+        canvas.height = window.innerHeight * .8;
 
-    document.onkeydown = function(event){
-        if (event.keyCode == 68) { 
-            socket.emit('keyPress', {InputId:'right', state:true})
-        } else  if (event.keyCode == 87) { 
-            socket.emit('keyPress', {InputId:'down', state:true})
-        } else  if (event.keyCode == 65) { 
-            socket.emit('keyPress', {InputId:'left', state:true})
-        } else  if (event.keyCode == 83) { 
-            socket.emit('keyPress', {InputId:'up', state:true})
+        let chatText = document.getElementById("chatText")
+        let chatInput = document.getElementById("chatInput")
+        let chatForm = document.getElementById("chatForm") 
+        socket.on('addToChat', function(color, data){
+            chatInput.value = ""
+            chatText.innerHTML += '<div style="opacity:.8; background-color: ' + color + '">' + data + '</div>'
+        })
+        socket.on('evalAns', function(data){
+            console.log(data)
+        }) 
+        chatForm.onsubmit = function(event) {
+            event.preventDefault()
+            if (chatInput.value[0] === '.') {
+                socket.emit('evalServ', chatInput.value.slice(1))
+            } else {
+                socket.emit('msgServ', chatInput.value)
+            }
         }
-    }
-    document.onkeyup = function(event){
-        if (event.keyCode == 68) { 
-            socket.emit('keyPress', {InputId:'right', state:false})
-        } else  if (event.keyCode == 87) { 
-            socket.emit('keyPress', {InputId:'down', state:false})
-        } else  if (event.keyCode == 65) { 
-            socket.emit('keyPress', {InputId:'left', state:false})
-        } else  if (event.keyCode == 83) { 
-            socket.emit('keyPress', {InputId:'up', state:false})
+        
+        socket.on('newPostions', function(data){
+            ctx.clearRect(0,0,canvas.width,canvas.height)
+            for (var i = 0; i < data.length;i++){
+                ctx.beginPath();
+                ctx.arc(data[i].x, data[i].y, 10, 0, 2 * Math.PI);
+                ctx.fillStyle = data[i].color;
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = "black";
+                ctx.textAlign="center"; 
+                ctx.fillText(data[i].name, data[i].x, data[i].y - 15) 
+
+            }
+        })
+
+        document.onkeydown = function(event){
+            if (event.keyCode == 68) { 
+                socket.emit('keyPress', {InputId:'right', state:true})
+            } else  if (event.keyCode == 87) { 
+                socket.emit('keyPress', {InputId:'down', state:true})
+            } else  if (event.keyCode == 65) { 
+                socket.emit('keyPress', {InputId:'left', state:true})
+            } else  if (event.keyCode == 83) { 
+                socket.emit('keyPress', {InputId:'up', state:true})
+            }
         }
-    }
-</script>
+        document.onkeyup = function(event){
+            if (event.keyCode == 68) { 
+                socket.emit('keyPress', {InputId:'right', state:false})
+            } else  if (event.keyCode == 87) { 
+                socket.emit('keyPress', {InputId:'down', state:false})
+            } else  if (event.keyCode == 65) { 
+                socket.emit('keyPress', {InputId:'left', state:false})
+            } else  if (event.keyCode == 83) { 
+                socket.emit('keyPress', {InputId:'up', state:false})
+            }
+        }
+    </script>
+</body>
