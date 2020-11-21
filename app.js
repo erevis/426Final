@@ -21,6 +21,7 @@ console.log("Server Started at localhost:2000")
 var SOCKET_LIST = {};
 var PLAYER_LIST = {};
 let Users = {};
+let chosenColors = [];
 
 //let canvas = document.getElementById("canv")
 
@@ -59,20 +60,19 @@ var Player = function(id){
 
 var io = require('socket.io') (serv, {})
 io.sockets.on('connection', function(socket) {
-
+    socket.emit('updateColors', PLAYER_LIST, chosenColors);
     
     socket.id = Math.random()
     SOCKET_LIST[socket.id] = socket;
     var player = Player(socket.id)
     PLAYER_LIST[socket.id] = player;
 
-    socket.on('signIn', function(data){
+    socket.on('signIn', function(data, clr){
         if (Users[data.Usr] === data.Pas) {
-            socket.emit('signInRes', {result:true})
             player.user = data.Usr;
             player.pass = data.Pas;
-            player.color = getRandomColor();
-            console.log(player.color)
+            player.color = clr;
+            socket.emit('signInRes', {result:true}, player, PLAYER_LIST)
         } else {
             socket.emit('signInRes', {result:false})
         }
@@ -90,6 +90,7 @@ io.sockets.on('connection', function(socket) {
     }) 
 
     socket.on('disconnect',function() {
+        chosenColors.pop(PLAYER_LIST[socket.id].color);
         delete SOCKET_LIST[socket.id]
         delete PLAYER_LIST[socket.id]
     })
@@ -123,15 +124,6 @@ io.sockets.on('connection', function(socket) {
 
     
 })
-
-function getRandomColor() {
-    var letters = '0123456789ABCDEF';
-    var color = '#';
-    for (var i = 0; i < 6; i++) {
-        color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
-}
 
 setInterval(function() {
     var package = []

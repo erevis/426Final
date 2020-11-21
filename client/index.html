@@ -1,5 +1,5 @@
 <head>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="client/style.css">
     <title></title>
 </head>
 <body>
@@ -7,23 +7,46 @@
         Username: <input id="inputUser" type="text"> </input> <br>
         Password: <input id="inputPass" type = text> </input>
         <button id="signIn"> Sign In </button>
-        <button id="signUp"> Sign Up </button>>
+        <button id="signUp"> Sign Up </button>
+        <label for="colors">Pick a color: </label>
+        <select name="colors" id="colors">
+        </select>
     </div> 
 
     <div id="game" style="display:none">
         <canvas id ="canv" style='border:1px solid #000000; cursor: none;'></canvas>
 
-        <div id="chatText" style="width:500px;height:100px;overflow-y:scroll;">  </div>
-        <form id = "chatForm">
-            <input id="chatInput" type="text" style="width:500px"></input> 
-        </form>  
+        <div id="chatContainer">
+            <div id="chatText" style="width:500px;height:100px;overflow-y:scroll;">  </div>
+            <form id = "chatForm">
+                <input id="chatInput" type="text" style="width:500px"></input> 
+            </form>
+        </div>
     </div>
 
-    <script src= "https://cdn.socket.io/socket.io-1.4.5.js">
-    </script>
+    <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
 
     <script>
         var socket = io();
+
+        // Update color selection
+        socket.on('updateColors', function(data, chosenClrs) {
+            for (var p in data) {
+                var player = data[p]
+                chosenClrs.push(player.color);
+            }
+            let colorSelection = document.getElementById('colors');
+            let colorList = ['red','orange','yellow','green','blue','indigo', 'violet', 'black']
+            for (let i = 0; i < 8; i++) {
+                if (!chosenClrs.includes(colorList[i])) {
+                    let colorOption = document.createElement('option')
+                    colorOption.value = colorList[i];
+                    colorOption.innerText = colorList[i];
+                    colorOption.id = colorList[i]
+                    colorSelection.append(colorOption);
+                }
+            }
+        })
         
         // The Sign-In Page Elements
         let login = document.getElementById("login")
@@ -35,22 +58,32 @@
 
         // Send Username and Password to the Server for signing up and signing in
         signIn.onclick = function(){
-            socket.emit('signIn', {Usr:user.value, Pas:pass.value})
+            let color = document.getElementById('colors').value;
+            socket.emit('signIn', {Usr:user.value, Pas:pass.value}, color)
         }
         signUp.onclick = function(e){
             socket.emit('signUp', {Usr:user.value, Pas:pass.value})
         }
 
         // If the user and pass are correct then show game page, else do nothing
-        socket.on('signInRes', function(data) {
+        socket.on('signInRes', function(data, player, playerList) {
             if (data.result) {
-                login.style.display = "none"
-                game.style.display = "inline-block"
+                login.style.display = "none";
+                game.style.display = "inline-block";
+                for (var x in playerList) {
+                    var p = playerList[x]
+                    if (player.color == p.color && player.id != p.id) {
+                        login.style.display = "inline";
+                        game.style.display = "none";
+                        alert("Color already chosen")
+                        document.getElementById(player.color).remove();
+                    }
+                }
             }
         })
 
         socket.on('signUpRes', function(data){
-            if (data.result){
+            if (data.result) {
                 login.style.display = "none"
                 game.style.display = "inline-block"
             }
@@ -62,22 +95,24 @@
         ctx.font = '20px Arial'
 
         // set canvas size
-        canvas.width  = window.innerWidth * .8;
-        canvas.height = window.innerHeight * .8;
+        canvas.width  = 750;
+        canvas.height = 500;
 
         let chatText = document.getElementById("chatText")
         let chatInput = document.getElementById("chatInput")
-        let chatForm = document.getElementById("chatForm") 
+        let chatForm = document.getElementById("chatForm")
 
         // When the server tells the client to add message, client adds to the chat and and clears the chat box
         socket.on('addToChat', function(color, data){
             chatInput.value = ""
             chatText.innerHTML += '<div style="opacity:.8; background-color: ' + color + '">' + data + '</div>'
         })
+
         // Used to print out for debugging 
         socket.on('evalAns', function(data){
             console.log(data)
         }) 
+
         // Start chat messages with '.' to evalate something. Ex: .Users would result in printing the Users online
         chatForm.onsubmit = function(event) {
             event.preventDefault()
@@ -87,9 +122,11 @@
                 socket.emit('msgServ', chatInput.value)
             }
         }
+
         //When the server sends new positions to the client, it will repaint the canvas with new positions
         socket.on('newPostions', function(data){
             ctx.clearRect(0,0,canvas.width,canvas.height)
+
             for (var i = 0; i < data.length;i++){
                 ctx.beginPath();
                 ctx.arc(data[i].x, data[i].y, 10, 0, 2 * Math.PI);
@@ -103,7 +140,7 @@
 
             }
         })
-      
+    
         //Tell server when someone presses WASD
         document.onkeydown = function(event){
             if (event.keyCode == 68) { 
