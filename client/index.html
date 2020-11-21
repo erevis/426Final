@@ -14,18 +14,20 @@
     </div> 
 
     <div id="game" style="display:none">
-        <canvas id ="canv" style='border:1px solid #000000;'></canvas>
+        <div id=wrapper>
+            <button id ="readyButton">
+                Ready
+            </button>
 
-        <div id="chatContainer">
-            <div id="chatText" style="width:500px;height:100px;overflow-y:scroll;">  </div>
-            <form id = "chatForm">
-                <input id="chatInput" type="text" style="width:500px"></input> 
-            </form>
-        </div> 
+            <canvas id ="canv" style='border:1px solid #000000;'></canvas>
 
-        <button id ="readyButton">
-            Ready
-        </button>
+            <div id="chatContainer">
+                <div id="chatText" style="width:750px;height:100px;overflow-y:scroll;">  </div>
+                <form id = "chatForm">
+                    <input id="chatInput" type="text" style="width:750px"></input> 
+                </form>
+            </div> 
+        </div>
     </div>
 
     <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
