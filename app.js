@@ -24,11 +24,10 @@ var PLAYER_LIST = {};
 let Users = {};
 let chosenColors = [];
 var bullet_list = []
+var powerUp_list = []
 var bulletId = 0
 
 var global_time = 0
-
-//let canvas = document.getElementById("canv")
 
 var Bullet = function (id, x, y, dir, spd) {
     let bullet = {
@@ -63,12 +62,21 @@ var Player = function (id) {
         pressLeft: false,
         pressDown: false,
         pressUp: false,
+        pressSpace: false,
         spd: 10,
         dead: false,
-        ready: false
+        ready: false,
+        powerUp:'none',
+        blink:null
     }
 
     self.move = function () {
+        if (self.blink != null && self.blink.status){
+            self.x = self.blink.x
+            self.y = self.blink.y
+            self.blink = null
+            self.powerUp = 'none'
+        }
         if (self.pressRight) {
             self.x += self.spd
         }
@@ -83,6 +91,15 @@ var Player = function (id) {
         }
     }
     return self
+}
+
+var PowerUp = function(x,y,type){
+    var powerUp = {
+        x:x,
+        y:y,
+        type:type
+    }
+    return powerUp
 }
 
 var io = require('socket.io') (serv, {})
@@ -135,6 +152,15 @@ io.sockets.on('connection', function(socket) {
         if (data.InputId == "down") {
             player.pressDown = data.state
         }
+        if (data.InputId == "space") {
+            player.pressSpace = data.state
+        }
+    })
+
+    socket.on('canvasClick', function(x,y){
+        if (player.powerUp == 'blink') {
+            player.blink = {status:true, x:x, y:y}
+        }
     })
 
     socket.on('msgServ', function (data) {
@@ -168,28 +194,38 @@ function startGame(){
         global_time += 5;
     
         var bullet_package = []
-        var package = []
+        var player_package = []
+        var powerUp_package = []
         let allDead = true
         for (var p in PLAYER_LIST) {
             var player = PLAYER_LIST[p]
-
+            if (player.pressSpace && player.powerUp == 'barrier') {
+                for (var b in bullet_list) {
+                    var bullet = bullet_list[b]
+                    if (distance(player.x, player.y, bullet.x, bullet.y) <= 100){
+                        delete bullet_list[b]
+                    }
+                }
+                player.powerUp = 'none'
+            }
             if (!player.dead){
                 allDead = false
             }
 
             if (!player.dead) {
                 player.move()
-                package.push({
+                player_package.push({
                     x: player.x,
                     y: player.y,
                     name: player.user,
-                    color: player.color
+                    color: player.color,
+                    powerUp: player.powerUp
                 })
             }
         }
         if(allDead) {
             for(var i in SOCKET_LIST){
-                SOCKET_LIST[i].emit('addToChat', "Game Over")
+                SOCKET_LIST[i].emit('addToChat','white', "Game Over")
             }
             clearInterval(this)
             resetGame()
@@ -214,16 +250,34 @@ function startGame(){
                 }
             }
         }
-        for (var i in SOCKET_LIST) {
-            var socket = SOCKET_LIST[i]
-            let players_bullets = { players: package, bullets: bullet_package }
-            socket.emit('newPostions', players_bullets)
+        for (var p in powerUp_list) {
+            var power = powerUp_list[p]
+            for(var j in PLAYER_LIST) {
+                var player = PLAYER_LIST[j]
+                if (distance(power.x, power.y, player.x, player.y) <=15){
+                    player.powerUp = power.type
+                    delete powerUp_list[p]
+                }
+            }
+            powerUp_package.push(power)
         }
     
-        if (global_time % 10 == 0) {
+        if (global_time % 40 == 0) {
             let pos = getBulletStart()
             var bullet = Bullet(bulletId++, pos.x, pos.y, pos.dir, 10)
             bullet_list.push(bullet)
+        }
+
+        if (global_time % 1000 == 0) {
+            let pos = getPowerUpStart()
+            var power = PowerUp(pos.x, pos.y, pos.type)
+            powerUp_list.push(power)
+        }
+
+        for (var i in SOCKET_LIST) {
+            var socket = SOCKET_LIST[i]
+            let package = { players: player_package, bullets: bullet_package, powerUps: powerUp_package}
+            socket.emit('newPostions', package)
         }
     }, 20)
 }
@@ -236,6 +290,7 @@ function resetGame(){
         player.x = 375
         player.y = 250
         bullet_list = []
+        powerUp_list = []
     }
 }
 
@@ -278,7 +333,24 @@ function getBulletStart() {
     }
 }
 
+function getPowerUpStart() {
+    let options =  Math.floor(Math.random() * Math.floor(2))
+    switch(options){
+        case 0:
+            return {
+                x: Math.random() * (750-1) +1,
+                y: Math.random() * (500-1) +1,
+                type: 'barrier'
+            }
+        case 1: 
+            return {
+                x: Math.random() * (750-1) +1,
+                y: Math.random() * (500-1) +1,
+                type: 'blink'
+            }   
+    }
+}
+
 function distance(x1, y1, x2, y2) {
     return Math.sqrt((x2 - x1)*(x2 - x1)  + (y2 - y1)*(y2 - y1))
 }
-
