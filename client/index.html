@@ -7,16 +7,20 @@
         Username: <input id="inputUser" type="text"> </input> <br>
         Password: <input id="inputPass" type = text> </input>
         <button id="signIn"> Sign In </button>
-        <button id="signUp"> Sign Up </button>>
+        <button id="signUp"> Sign Up </button>
     </div> 
 
     <div id="game" style="display:none">
-        <canvas id ="canv" style='border:1px solid #000000; cursor: none;'></canvas>
+        <canvas id ="canv" style='border:1px solid #000000;'></canvas>
 
         <div id="chatText" style="width:500px;height:100px;overflow-y:scroll;">  </div>
         <form id = "chatForm">
             <input id="chatInput" type="text" style="width:500px"></input> 
         </form>  
+
+        <button id ="readyButton">
+            Ready
+        </button>
     </div>
 
     <script src= "https://cdn.socket.io/socket.io-1.4.5.js">
@@ -41,6 +45,10 @@
             socket.emit('signUp', {Usr:user.value, Pas:pass.value})
         }
 
+        document.getElementById('readyButton').onclick = function(){
+            socket.emit('readyUp')
+        }
+
         // If the user and pass are correct then show game page, else do nothing
         socket.on('signInRes', function(data) {
             if (data.result) {
@@ -62,8 +70,8 @@
         ctx.font = '20px Arial'
 
         // set canvas size
-        canvas.width  = window.innerWidth * .8;
-        canvas.height = window.innerHeight * .8;
+        canvas.width  = 750
+        canvas.height = 500
 
         let chatText = document.getElementById("chatText")
         let chatInput = document.getElementById("chatInput")
@@ -90,19 +98,25 @@
         //When the server sends new positions to the client, it will repaint the canvas with new positions
         socket.on('newPostions', function(data){
             ctx.clearRect(0,0,canvas.width,canvas.height)
-            for (var i = 0; i < data.length;i++){
+            for (var i = 0; i < data.players.length;i++){
                 ctx.beginPath();
-                ctx.arc(data[i].x, data[i].y, 10, 0, 2 * Math.PI);
-                ctx.fillStyle = data[i].color;
+                ctx.arc(data.players[i].x, data.players[i].y, 10, 0, 2 * Math.PI);
+                ctx.fillStyle = data.players[i].color;
                 ctx.fill();
                 ctx.stroke();
 
                 ctx.fillStyle = "black";
                 ctx.textAlign="center"; 
-                ctx.fillText(data[i].name, data[i].x, data[i].y - 15) 
-
+                ctx.fillText(data.players[i].name, data.players[i].x, data.players[i].y - 15) 
+            }
+            for (var i = 0; i < data.bullets.length; i++){
+                ctx.beginPath()
+                ctx.arc(data.bullets[i].x, data.bullets[i].y, 10, 0, 2 * Math.PI)
+                ctx.fillStyle = "black";
+                ctx.fill();
             }
         })
+
       
         //Tell server when someone presses WASD
         document.onkeydown = function(event){
