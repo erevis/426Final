@@ -9,10 +9,12 @@ body {
 
 #canv {
     display:inline-block;
+    overflow: visible;
     background-color: #f8f8ff;
 }
 
 #chatText {
+    position: relative;
     display:inline-block;
     background-color: white;
 }
@@ -20,6 +22,10 @@ body {
 #gameContainer {
     position: relative;
     white-space: nowrap;
+}
+
+#container canvas, #readyButton {
+    position: absolute;
 }
 
 #chatForm {
@@ -34,22 +40,26 @@ body {
 }
 
 #readyButton {
-    display: inline-block;
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    width: 100px;
     padding: 0.4em 1.25em;
-    border: 0.1em solid #FFFFFF;
-    margin: 0 0 0.3em 0;
-    border-radius: 0.1em;
+    border: none;
+    margin: 1em 1em 0.3em 0;
     font-family: 'Roboto',sans-serif;
     font-size: 15px;
-    color:#FFFFFF;
-    background-color: rgba(0, 0, 0, 0.0);
+    color:#000000;
+    background-color: #FFD700; 
     text-align: center;
-    transition: all 0.2s;
+    transition: 0.2s;
+    cursor: pointer;
 }
 
 #readyButton:hover{
+    border:0.1em solid #000000;
     color:#000000;
-    background-color:#FFFFFF;
+    background-color:  #FFFFFF;
 }
 
 #signIn {
