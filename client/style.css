@@ -24,7 +24,7 @@ body {
     white-space: nowrap;
 }
 
-#container canvas, #readyButton {
+#gameContainer canvas, #readyButton {
     position: absolute;
 }
 
