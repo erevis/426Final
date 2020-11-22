@@ -3,6 +3,8 @@
 // Use socket.emit() and socket.on() to send the 
 
 //Setting Up NodeJS 
+
+require("./database")
 const e = require('express');
 var express = require('express');
 const { dirname } = require('path');
@@ -112,25 +114,28 @@ io.sockets.on('connection', function(socket) {
     PLAYER_LIST[socket.id] = player;
 
     socket.on('signIn', function(data, clr){
-        if (Users[data.Usr] === data.Pas) {
-            player.user = data.Usr;
-            player.pass = data.Pas;
-            player.color = clr;
-            socket.emit('signInRes', {result:true}, player, PLAYER_LIST)
-        } else {
-            socket.emit('signInRes', { result: false })
-        }
+        Database.correctPass(data, function(res){
+            if (res){
+                player.user = data.Usr;
+                player.color = clr;
+                socket.emit('signInRes', {result:true}, player, PLAYER_LIST)
+            } else {
+                socket.emit('signInRes', { result: false })
+            }
+        })
     })
 
-    socket.on('signUp', function (data) {
-        if (Users[data.Usr]) {
-            socket.emit('signUpRes', { success: false })
-            player.user = data.Usr
-            player.pass = data.Pas
-        } else {
-            Users[data.Usr] = data.Pas
-            socket.emit('signUpRes', { success: true })
-        }
+    socket.on('signUp', function(data) {
+        Database.takenUser(data, function(res){
+            if (res) {
+                socket.emit('signUpResponse',{success:false})
+            } else {
+                Database.addUser(data, function(){
+					socket.emit('signUpResponse',{success:true});					
+				});
+                player.user = data.Usr
+            }
+        })
     })
 
     socket.on('disconnect',function() {
