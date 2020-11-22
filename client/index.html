@@ -5,8 +5,15 @@
 
 <body>
     <div id="login">
+<<<<<<< HEAD
         Username: <input id="inputUser" type="text"> </input> <br>
         Password: <input id="inputPass" type=text> </input>
+=======
+        <label for="inputUser">Username</label>
+        <input id="inputUser" type="text"> </input> <br>
+        <label for="inputPass">Password</label>
+        <input id="inputPass" type = text> </input> <br>
+>>>>>>> 4190a428531d9c33aa4efedca176e91061474751
         <button id="signIn"> Sign In </button>
         <button id="signUp"> Sign Up </button>
         <label for="colors">Pick a color: </label>
@@ -15,6 +22,7 @@
     </div>
 
     <div id="game" style="display:none">
+<<<<<<< HEAD
         <canvas id="canv" style='border:1px solid #000000;'></canvas>
 
         <div id="chatContainer">
@@ -27,6 +35,21 @@
         <button id="readyButton">
             Ready
         </button>
+=======
+        <div id=wrapper>
+            <div id=gameContainer>
+                <div id="chatText" style="width:150px;height:500px;overflow-y:scroll;"></div>
+                <canvas id ="canv" style='border:1px solid #000000;'></canvas>
+                <button id="readyButton">
+                    Ready
+                </button>
+            </div>
+    
+            <form id = "chatForm">
+                <input id="chatInput" type="text" style="width:906px"></input> 
+            </form>
+        </div>
+>>>>>>> 4190a428531d9c33aa4efedca176e91061474751
     </div>
 
     <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
