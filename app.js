@@ -254,7 +254,7 @@ function startGame(){
             var power = powerUp_list[p]
             for(var j in PLAYER_LIST) {
                 var player = PLAYER_LIST[j]
-                if (distance(power.x, power.y, player.x, player.y) <=15){
+                if (distance(power.x, power.y, player.x, player.y) <=25){
                     player.powerUp = power.type
                     delete powerUp_list[p]
                 }
@@ -289,9 +289,11 @@ function resetGame(){
         player.dead= false
         player.x = 375
         player.y = 250
-        bullet_list = []
-        powerUp_list = []
+        player.powerUp = 'none'
     }
+    bullet_list = []
+    powerUp_list = []
+    global_time = 0
 }
 
 function getRandomColor() {

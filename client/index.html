@@ -138,8 +138,9 @@
         //Detect if the mouse is over the canvas
         let mouseInCanv = false
         document.onmousemove = function (event) {
-            let x = event.pageX - canvas.offsetLeft
-            let y = event.pageY - canvas.offsetTop
+            let cv = canvas.getBoundingClientRect()
+            let x = event.clientX - cv.left
+            let y = event.clientY - cv.top
             if (x >= 0 && x <= 750 && y >= 0 && y <= 500) {
                 mouseInCanv = true
             } else {
@@ -149,7 +150,7 @@
 
         canvas.onclick = function (event) {
             if (mouseInCanv) {
-                socket.emit('canvasClick', event.pageX - canvas.offsetLeft, event.pageY - canvas.offsetTop)
+                socket.emit('canvasClick',event.clientX - canvas.getBoundingClientRect().left,event.clientY - canvas.getBoundingClientRect().top)
             }
         }
 
