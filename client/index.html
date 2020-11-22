@@ -1,7 +1,8 @@
 <head>
     <link rel="stylesheet" href="client/style.css">
-    <title></title>
+    <title>DodgeBall</title>
 </head>
+
 <body>
     <div id="login">
         <label for="inputUser">Username</label>
@@ -10,10 +11,11 @@
         <input id="inputPass" type = text> </input> <br>
         <button id="signIn"> Sign In </button>
         <button id="signUp"> Sign Up </button>
+        <button id="removeAct"> Delete Account</button>
         <label for="colors">Pick a color: </label>
         <select name="colors" id="colors">
         </select>
-    </div> 
+    </div>
 
     <div id="game" style="display:none">
         <div id=wrapper>
@@ -37,13 +39,13 @@
         var socket = io();
 
         // Update color selection
-        socket.on('updateColors', function(data, chosenClrs) {
+        socket.on('updateColors', function (data, chosenClrs) {
             for (var p in data) {
                 var player = data[p]
                 chosenClrs.push(player.color);
             }
             let colorSelection = document.getElementById('colors');
-            let colorList = ['red','orange','yellow','green','blue','indigo', 'violet', 'black']
+            let colorList = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet', 'black']
             for (let i = 0; i < 8; i++) {
                 if (!chosenClrs.includes(colorList[i])) {
                     let colorOption = document.createElement('option')
@@ -54,30 +56,34 @@
                 }
             }
         })
-        
+
         // The Sign-In Page Elements
         let login = document.getElementById("login")
         let game = document.getElementById("game")
         let user = document.getElementById("inputUser")
-        let pass = document.getElementById("inputPass")  
+        let pass = document.getElementById("inputPass")
         let signIn = document.getElementById("signIn")
         let signUp = document.getElementById("signUp")
+        let removeAct = document.getElementById("removeAct")
 
         // Send Username and Password to the Server for signing up and signing in
-        signIn.onclick = function(){
+        signIn.onclick = function () {
             let color = document.getElementById('colors').value;
-            socket.emit('signIn', {Usr:user.value, Pas:pass.value}, color)
+            socket.emit('signIn', { Usr: user.value, Pas: pass.value }, color)
         }
-        signUp.onclick = function(e){
-            socket.emit('signUp', {Usr:user.value, Pas:pass.value})
+        signUp.onclick = function (e) {
+            socket.emit('signUp', { Usr: user.value, Pas: pass.value })
+        }
+        removeAct.onclick = function(e) {
+            socket.emit('removeAct', {Usr: user.value, Pas: pass.value})
         }
 
-        document.getElementById('readyButton').onclick = function(){
+        document.getElementById('readyButton').onclick = function () {
             socket.emit('readyUp')
         }
 
         // If the user and pass are correct then show game page, else do nothing
-        socket.on('signInRes', function(data, player, playerList) {
+        socket.on('signInRes', function (data, player, playerList) {
             if (data.result) {
                 login.style.display = "none";
                 game.style.display = "inline-block";
@@ -93,20 +99,20 @@
             }
         })
 
-        socket.on('signUpRes', function(data){
+        socket.on('signUpRes', function (data) {
             if (data.result) {
                 login.style.display = "none"
                 game.style.display = "inline-block"
             }
         })
-        
+
         // Game Page Elements
         var canvas = document.getElementById("canv")
         var ctx = canvas.getContext("2d")
-        ctx.font = '20px Arial'
+        ctx.font = "30px Arial"
 
         // set canvas size
-        canvas.width  = 750
+        canvas.width = 750
         canvas.height = 500
 
         let chatText = document.getElementById("chatText")
@@ -114,18 +120,18 @@
         let chatForm = document.getElementById("chatForm")
 
         // When the server tells the client to add message, client adds to the chat and and clears the chat box
-        socket.on('addToChat', function(color, data){
+        socket.on('addToChat', function (color, data) {
             chatInput.value = ""
             chatText.innerHTML += '<div style="opacity:.8; background-color: ' + color + '">' + data + '</div>'
         })
 
         // Used to print out for debugging 
-        socket.on('evalAns', function(data){
+        socket.on('evalAns', function (data) {
             console.log(data)
-        }) 
+        })
 
         // Start chat messages with '.' to evalate something. Ex: .Users would result in printing the Users online
-        chatForm.onsubmit = function(event) {
+        chatForm.onsubmit = function (event) {
             event.preventDefault()
             if (chatInput.value[0] === '.') {
                 socket.emit('evalServ', chatInput.value.slice(1))
@@ -134,49 +140,119 @@
             }
         }
 
+        //Detect if the mouse is over the canvas
+        let mouseInCanv = false
+        document.onmousemove = function (event) {
+            let cv = canvas.getBoundingClientRect()
+            let x = event.clientX - cv.left
+            let y = event.clientY - cv.top
+            if (x >= 0 && x <= 750 && y >= 0 && y <= 500) {
+                mouseInCanv = true
+            } else {
+                mouseInCanv = false
+            }
+        }
+
+        canvas.onclick = function (event) {
+            if (mouseInCanv) {
+                socket.emit('canvasClick',event.clientX - canvas.getBoundingClientRect().left,event.clientY - canvas.getBoundingClientRect().top)
+            }
+        }
+
         //When the server sends new positions to the client, it will repaint the canvas with new positions
-        socket.on('newPostions', function(data){
-            ctx.clearRect(0,0,canvas.width,canvas.height)
-            for (var i = 0; i < data.players.length;i++){
+        socket.on('newPostions', function (data) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height)
+            for (var i = 0; i < data.players.length; i++) {
                 ctx.beginPath();
                 ctx.arc(data.players[i].x, data.players[i].y, 10, 0, 2 * Math.PI);
                 ctx.fillStyle = data.players[i].color;
                 ctx.fill();
+                ctx.lineWidth = 1;
+                ctx.strokeStyle = "black";
                 ctx.stroke();
+                if(data.players[i].powerUp == 'barrier'){
+                    ctx.beginPath()
+                    ctx.arc(data.players[i].x, data.players[i].y, 100, 0, 2 * Math.PI);
+                    ctx.stroke();
+                } 
 
                 ctx.fillStyle = "black";
-                ctx.textAlign="center"; 
-                ctx.fillText(data.players[i].name, data.players[i].x, data.players[i].y - 15) 
+                ctx.textAlign = "center";
+                ctx.fillText(data.players[i].name, data.players[i].x, data.players[i].y - 15)
             }
-            for (var i = 0; i < data.bullets.length; i++){
+
+            for (var i = 0; i < data.bullets.length; i++) {
                 ctx.beginPath()
                 ctx.arc(data.bullets[i].x, data.bullets[i].y, 10, 0, 2 * Math.PI)
                 ctx.fillStyle = "black";
                 ctx.fill();
             }
+
+            for (var i = 0; i < data.powerUps.length; i++) {
+                if (data.powerUps[i].type == 'barrier') {
+                    drawStar(data.powerUps[i].x, data.powerUps[i].y, 5, 10, 5, 'purple')
+                }
+                if (data.powerUps[i].type == 'blink') {
+                    drawStar(data.powerUps[i].x, data.powerUps[i].y, 5, 10, 5, 'blue')
+                }
+            }
+
+            function drawStar(cx, cy, spikes, outerRadius, innerRadius, color) {
+                var rot = Math.PI / 2 * 3;
+                var x = cx;
+                var y = cy;
+                var step = Math.PI / spikes;
+
+                ctx.strokeStyle = "#000";
+                ctx.beginPath();
+                ctx.moveTo(cx, cy - outerRadius)
+                for (let i = 0; i < spikes; i++) {
+                    x = cx + Math.cos(rot) * outerRadius;
+                    y = cy + Math.sin(rot) * outerRadius;
+                    ctx.lineTo(x, y)
+                    rot += step
+
+                    x = cx + Math.cos(rot) * innerRadius;
+                    y = cy + Math.sin(rot) * innerRadius;
+                    ctx.lineTo(x, y)
+                    rot += step
+                }
+                ctx.lineTo(cx, cy - outerRadius)
+                ctx.closePath();
+                ctx.lineWidth = 5;
+                ctx.strokeStyle = color;
+                ctx.stroke();
+                ctx.fillStyle = color;
+                ctx.fill();
+            }
         })
-    
+
         //Tell server when someone presses WASD
-        document.onkeydown = function(event){
-            if (event.keyCode == 68) { 
-                socket.emit('keyPress', {InputId:'right', state:true})
-            } else  if (event.keyCode == 87) { 
-                socket.emit('keyPress', {InputId:'down', state:true})
-            } else  if (event.keyCode == 65) { 
-                socket.emit('keyPress', {InputId:'left', state:true})
-            } else  if (event.keyCode == 83) { 
-                socket.emit('keyPress', {InputId:'up', state:true})
+        document.onkeydown = function (event) {
+            if (event.keyCode == 68) {
+                socket.emit('keyPress', { InputId: 'right', state: true })
+            } else if (event.keyCode == 87) {
+                socket.emit('keyPress', { InputId: 'down', state: true })
+            } else if (event.keyCode == 65) {
+                socket.emit('keyPress', { InputId: 'left', state: true })
+            } else if (event.keyCode == 83) {
+                socket.emit('keyPress', { InputId: 'up', state: true })
+            } else if (event.keyCode == 32) {
+                socket.emit('keyPress', { InputId: 'space', state: true })
             }
         }
-        document.onkeyup = function(event){
-            if (event.keyCode == 68) { 
-                socket.emit('keyPress', {InputId:'right', state:false})
-            } else  if (event.keyCode == 87) { 
-                socket.emit('keyPress', {InputId:'down', state:false})
-            } else  if (event.keyCode == 65) { 
-                socket.emit('keyPress', {InputId:'left', state:false})
-            } else  if (event.keyCode == 83) { 
-                socket.emit('keyPress', {InputId:'up', state:false})
+
+        document.onkeyup = function (event) {
+            if (event.keyCode == 68) {
+                socket.emit('keyPress', { InputId: 'right', state: false })
+            } else if (event.keyCode == 87) {
+                socket.emit('keyPress', { InputId: 'down', state: false })
+            } else if (event.keyCode == 65) {
+                socket.emit('keyPress', { InputId: 'left', state: false })
+            } else if (event.keyCode == 83) {
+                socket.emit('keyPress', { InputId: 'up', state: false })
+            } else if (event.keyCode == 32) {
+                socket.emit('keyPress', { InputId: 'space', state: false })
             }
         }
     </script>
