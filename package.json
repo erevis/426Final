@@ -2,7 +2,7 @@
   "name": "426final",
   "version": "1.0.0",
   "description": "Online game for Comp 426 group final",
-  "main": "./app.js",
+  "main": "app.js",
   "dependencies": {
     "express": "^4.17.1",
     "jquery": "^3.5.1",
