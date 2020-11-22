@@ -11,6 +11,7 @@
         <input id="inputPass" type = text> </input> <br>
         <button id="signIn"> Sign In </button>
         <button id="signUp"> Sign Up </button>
+        <button id="removeAct"> Delete Account</button>
         <label for="colors">Pick a color: </label>
         <select name="colors" id="colors">
         </select>
@@ -63,6 +64,7 @@
         let pass = document.getElementById("inputPass")
         let signIn = document.getElementById("signIn")
         let signUp = document.getElementById("signUp")
+        let removeAct = document.getElementById("removeAct")
 
         // Send Username and Password to the Server for signing up and signing in
         signIn.onclick = function () {
@@ -71,6 +73,9 @@
         }
         signUp.onclick = function (e) {
             socket.emit('signUp', { Usr: user.value, Pas: pass.value })
+        }
+        removeAct.onclick = function(e) {
+            socket.emit('removeAct', {Usr: user.value, Pas: pass.value})
         }
 
         document.getElementById('readyButton').onclick = function () {

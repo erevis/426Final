@@ -33,9 +33,8 @@ Database.addUser = function(data, callback) {
 	})
 }
 
-Database.deleteUser = function(data, callback) {
+Database.deleteUser = function(data) {
     _database.account.remove({username:data.Usr, password:data.Pas}, function(err){
         if (err) throw err
-        callback()
     })
 }

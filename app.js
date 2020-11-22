@@ -79,16 +79,16 @@ var Player = function (id) {
             self.blink = null
             self.powerUp = 'none'
         }
-        if (self.pressRight) {
+        if (self.pressRight && self.x+self.spd <=750) {
             self.x += self.spd
         }
-        if (self.pressLeft) {
+        if (self.pressLeft && self.x-self.spd >=0) {
             self.x -= self.spd
         }
-        if (self.pressDown) {
+        if (self.pressDown && self.y-self.spd>=0) {
             self.y -= self.spd
         }
-        if (self.pressUp) {
+        if (self.pressUp && self.y+self.spd<=500) {
             self.y += self.spd
         }
     }
@@ -136,6 +136,10 @@ io.sockets.on('connection', function(socket) {
                 player.user = data.Usr
             }
         })
+    })
+
+    socket.on('removeAct', function(data){
+        Database.deleteUser(data)
     })
 
     socket.on('disconnect',function() {
