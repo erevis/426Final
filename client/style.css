@@ -26,6 +26,9 @@ body {
     display:inline-block;
     width: 140px;
     word-wrap: break-word;
+    /* border-bottom: 1px solid black;
+    border-top: 1px solid black; */
+    margin-bottom: 5px;
 }
 
 #gameContainer {

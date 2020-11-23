@@ -13,7 +13,7 @@
         <button id="signUp"> Sign Up </button>
         <button id="removeAct"> Delete Account</button>
         <label for="colors">Pick a color: </label>
-        <select name="colors" id="colors"></select>
+        <select name="colors" id="colors" style='width: 60px'></select>
         <p id='sucsignup' style='color: #32CD32; display: none; margin-bottom: -5px'>Successfully created account, Log in.</p>
         <p id='failsignup' style='color: red; display: none; margin-bottom: -5px'>Error creating account, Try again later.</p>
         <p id='failsignin' style='color: red; display: none; margin-bottom: -5px'>Error signing in, Try creating an account first.</p>
@@ -48,7 +48,7 @@
                 chosenClrs.push(player.color);
             }
             let colorSelection = document.getElementById('colors');
-            let colorList = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet', 'black'];
+            let colorList = ['red', 'orange', 'yellow', 'green', 'cyan', 'aquamarine', 'purple', 'violet'];
             for (let i = 0; i < 8; i++) {
                 if (!chosenClrs.includes(colorList[i])) {
                     let colorOption = document.createElement('option');
@@ -144,8 +144,10 @@
 
         // When the server tells the client to add message, client adds to the chat and and clears the chat box
         socket.on('addToChat', function (color, data) {
-            chatInput.value = "";
-            chatText.innerHTML += '<div class="msg" style="opacity:1; font-weight: bold; background-color: ' + color + '">' + data + '</div>';
+            if (chatInput.value != "") {
+                chatInput.value = "";
+                chatText.innerHTML += '<div class="msg" style="opacity:1; font-weight: bold; background-color: ' + color + '">' + data + '</div>';
+            }
         })
 
         // Used to print out for debugging 
