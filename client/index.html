@@ -20,7 +20,7 @@
     <div id="game" style="display:none">
         <div id=wrapper>
             <div id=gameContainer>
-                <div id="chatText" style="width:150px;height:500px;overflow-y:scroll;"></div>
+                <div id="chatText" style="width:150px;height:499.5px;overflow-y:scroll;"></div>
                 <canvas id ="canv" style='border:1px solid #000000;'></canvas>
                 <button id="readyButton">
                     Ready
@@ -122,7 +122,7 @@
         // When the server tells the client to add message, client adds to the chat and and clears the chat box
         socket.on('addToChat', function (color, data) {
             chatInput.value = ""
-            chatText.innerHTML += '<div style="opacity:.8; background-color: ' + color + '">' + data + '</div>'
+            chatText.innerHTML += '<div class="msg" style="opacity:.8; background-color: ' + color + '">' + data + '</div>'
         })
 
         // Used to print out for debugging 

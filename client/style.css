@@ -14,14 +14,22 @@ body {
 }
 
 #chatText {
+    margin-right: 2.5px;
+    margin-top: 1px;
     position: relative;
     display:inline-block;
     background-color: white;
+    overflow-x: hidden;
+}
+
+.msg {
+    display:inline-block;
+    width: 140px;
+    word-wrap: break-word;
 }
 
 #gameContainer {
     position: relative;
-    white-space: nowrap;
 }
 
 #gameContainer canvas, #readyButton {

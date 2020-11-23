@@ -271,7 +271,7 @@ function startGame(){
             powerUp_package.push(power)
         }
     
-        if (global_time % 40 == 0) {
+        if (global_time % 10 == 0) {
             let pos = getBulletStart()
             var bullet = Bullet(bulletId++, pos.x, pos.y, pos.dir, 10)
             bullet_list.push(bullet)
