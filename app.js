@@ -4,6 +4,7 @@
 
 //Setting Up NodeJS 
 
+require("./database")
 const e = require('express');
 var express = require('express');
 const { dirname } = require('path');
