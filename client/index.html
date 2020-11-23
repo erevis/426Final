@@ -13,8 +13,11 @@
         <button id="signUp"> Sign Up </button>
         <button id="removeAct"> Delete Account</button>
         <label for="colors">Pick a color: </label>
-        <select name="colors" id="colors">
-        </select>
+        <select name="colors" id="colors"></select>
+        <p id='sucsignup' style='color: #32CD32; display: none; margin-bottom: -5px'>Successfully created account, Log in.</p>
+        <p id='failsignup' style='color: red; display: none; margin-bottom: -5px'>Error creating account, Try again later.</p>
+        <p id='failsignin' style='color: red; display: none; margin-bottom: -5px'>Error signing in, Try creating an account first.</p>
+        <p id='delacct' style='color: #ffa500; display: none; margin-bottom: -5px'>Account deleted.</p>
     </div>
 
     <div id="game" style="display:none">
@@ -41,17 +44,17 @@
         // Update color selection
         socket.on('updateColors', function (data, chosenClrs) {
             for (var p in data) {
-                var player = data[p]
+                var player = data[p];
                 chosenClrs.push(player.color);
             }
             let colorSelection = document.getElementById('colors');
-            let colorList = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet', 'black']
+            let colorList = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet', 'black'];
             for (let i = 0; i < 8; i++) {
                 if (!chosenClrs.includes(colorList[i])) {
-                    let colorOption = document.createElement('option')
+                    let colorOption = document.createElement('option');
                     colorOption.value = colorList[i];
                     colorOption.innerText = colorList[i];
-                    colorOption.id = colorList[i]
+                    colorOption.id = colorList[i];
                     colorSelection.append(colorOption);
                 }
             }
@@ -64,22 +67,30 @@
         let pass = document.getElementById("inputPass")
         let signIn = document.getElementById("signIn")
         let signUp = document.getElementById("signUp")
+        let sucSignUp = document.getElementById('sucsignup') // success msg
+        let failSignUp = document.getElementById('failsignup') // fail msg
+        let delacct = document.getElementById('delacct') // del msg
         let removeAct = document.getElementById("removeAct")
+        let failSignIn = document.getElementById("failsignin")
 
         // Send Username and Password to the Server for signing up and signing in
         signIn.onclick = function () {
             let color = document.getElementById('colors').value;
-            socket.emit('signIn', { Usr: user.value, Pas: pass.value }, color)
+            socket.emit('signIn', { Usr: user.value, Pas: pass.value }, color);
         }
         signUp.onclick = function (e) {
-            socket.emit('signUp', { Usr: user.value, Pas: pass.value })
+            socket.emit('signUp', { Usr: user.value, Pas: pass.value });
         }
         removeAct.onclick = function(e) {
-            socket.emit('removeAct', {Usr: user.value, Pas: pass.value})
+            socket.emit('removeAct', {Usr: user.value, Pas: pass.value});
+            sucSignUp.style.display = 'none';
+            failSignUp.style.display = 'none';
+            failSignIn.style.display = 'none';
+            delacct.style.display = 'block';
         }
 
         document.getElementById('readyButton').onclick = function () {
-            socket.emit('readyUp')
+            socket.emit('readyUp');
         }
 
         // If the user and pass are correct then show game page, else do nothing
@@ -92,76 +103,88 @@
                     if (player.color == p.color && player.id != p.id) {
                         login.style.display = "inline";
                         game.style.display = "none";
-                        alert("Color already chosen")
+                        alert("Color already chosen");
                         document.getElementById(player.color).remove();
                     }
                 }
+            } else {
+                sucSignUp.style.display = 'none';
+                failSignUp.style.display = 'none';
+                delacct.style.display = 'none';
+                failSignIn.style.display = 'block';
             }
         })
 
         socket.on('signUpRes', function (data) {
             if (data.result) {
-                login.style.display = "none"
-                game.style.display = "inline-block"
+                failSignUp.style.display = 'none';
+                delacct.style.display = 'none';
+                failSignIn.style.display = 'none';
+                sucSignUp.style.display ='block';
+            } else {
+                sucSignUp.style.display = 'none';
+                delacct.style.display = 'none';
+                failSignIn.style.display = 'none';
+                failSignUp.style.display ='block';
             }
         })
 
         // Game Page Elements
-        var canvas = document.getElementById("canv")
-        var ctx = canvas.getContext("2d")
-        ctx.font = "30px Arial"
+        var canvas = document.getElementById("canv");
+        var ctx = canvas.getContext("2d");
+        ctx.font = "30px Arial";
 
         // set canvas size
-        canvas.width = 750
-        canvas.height = 500
+        canvas.width = 750;
+        canvas.height = 500;
 
-        let chatText = document.getElementById("chatText")
-        let chatInput = document.getElementById("chatInput")
-        let chatForm = document.getElementById("chatForm")
+        let chatText = document.getElementById("chatText");
+        let chatInput = document.getElementById("chatInput");
+        let chatForm = document.getElementById("chatForm");
 
         // When the server tells the client to add message, client adds to the chat and and clears the chat box
         socket.on('addToChat', function (color, data) {
-            chatInput.value = ""
-            chatText.innerHTML += '<div class="msg" style="opacity:.8; background-color: ' + color + '">' + data + '</div>'
+            chatInput.value = "";
+            chatText.innerHTML += '<div class="msg" style="opacity:1; font-weight: bold; background-color: ' + color + '">' + data + '</div>';
         })
 
         // Used to print out for debugging 
         socket.on('evalAns', function (data) {
-            console.log(data)
+            console.log(data);
         })
 
         // Start chat messages with '.' to evalate something. Ex: .Users would result in printing the Users online
         chatForm.onsubmit = function (event) {
             event.preventDefault()
             if (chatInput.value[0] === '.') {
-                socket.emit('evalServ', chatInput.value.slice(1))
+                socket.emit('evalServ', chatInput.value.slice(1));
             } else {
-                socket.emit('msgServ', chatInput.value)
+                socket.emit('msgServ', chatInput.value);
             }
         }
 
         //Detect if the mouse is over the canvas
         let mouseInCanv = false
         document.onmousemove = function (event) {
-            let cv = canvas.getBoundingClientRect()
-            let x = event.clientX - cv.left
-            let y = event.clientY - cv.top
+            let cv = canvas.getBoundingClientRect();
+            let x = event.clientX - cv.left;
+            let y = event.clientY - cv.top;
             if (x >= 0 && x <= 750 && y >= 0 && y <= 500) {
-                mouseInCanv = true
+                mouseInCanv = true;
             } else {
-                mouseInCanv = false
+                mouseInCanv = false;
             }
         }
 
         canvas.onclick = function (event) {
             if (mouseInCanv) {
-                socket.emit('canvasClick',event.clientX - canvas.getBoundingClientRect().left,event.clientY - canvas.getBoundingClientRect().top)
+                socket.emit('canvasClick',event.clientX - canvas.getBoundingClientRect().left,event.clientY - canvas.getBoundingClientRect().top);
             }
         }
 
         //When the server sends new positions to the client, it will repaint the canvas with new positions
         socket.on('newPostions', function (data) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height)
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             for (var i = 0; i < data.players.length; i++) {
                 ctx.beginPath();
                 ctx.arc(data.players[i].x, data.players[i].y, 10, 0, 2 * Math.PI);
@@ -170,8 +193,8 @@
                 ctx.lineWidth = 1;
                 ctx.strokeStyle = "black";
                 ctx.stroke();
-                if(data.players[i].powerUp == 'barrier'){
-                    ctx.beginPath()
+                if(data.players[i].powerUp == 'barrier') {
+                    ctx.beginPath();
                     ctx.arc(data.players[i].x, data.players[i].y, 100, 0, 2 * Math.PI);
                     ctx.stroke();
                 } 
@@ -182,18 +205,18 @@
             }
 
             for (var i = 0; i < data.bullets.length; i++) {
-                ctx.beginPath()
-                ctx.arc(data.bullets[i].x, data.bullets[i].y, 10, 0, 2 * Math.PI)
+                ctx.beginPath();
+                ctx.arc(data.bullets[i].x, data.bullets[i].y, 10, 0, 2 * Math.PI);
                 ctx.fillStyle = "black";
                 ctx.fill();
             }
 
             for (var i = 0; i < data.powerUps.length; i++) {
                 if (data.powerUps[i].type == 'barrier') {
-                    drawStar(data.powerUps[i].x, data.powerUps[i].y, 5, 10, 5, 'purple')
+                    drawStar(data.powerUps[i].x, data.powerUps[i].y, 5, 10, 5, 'purple');
                 }
                 if (data.powerUps[i].type == 'blink') {
-                    drawStar(data.powerUps[i].x, data.powerUps[i].y, 5, 10, 5, 'blue')
+                    drawStar(data.powerUps[i].x, data.powerUps[i].y, 5, 10, 5, 'blue');
                 }
             }
 
@@ -217,7 +240,7 @@
                     ctx.lineTo(x, y)
                     rot += step
                 }
-                ctx.lineTo(cx, cy - outerRadius)
+                ctx.lineTo(cx, cy - outerRadius);
                 ctx.closePath();
                 ctx.lineWidth = 5;
                 ctx.strokeStyle = color;

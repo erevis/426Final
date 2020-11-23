@@ -4,32 +4,31 @@
 
 //Setting Up NodeJS 
 
-require("./database")
+require("./database");
 const e = require('express');
 var express = require('express');
 const { dirname } = require('path');
-var app = express()
+var app = express();
 var serv = require('http').Server(app);
-const hostname = 'tarheels.live/nwillengame/'
+const hostname = 'tarheels.live/nwillengame/';
 
 app.get('/', function (req, res) {
-    res.sendFile(__dirname + '/client/index.html')
+    res.sendFile(__dirname + '/client/index.html');
 })
 
-app.use('/client', express.static(__dirname + '/client'))
+app.use('/client', express.static(__dirname + '/client'));
 
 serv.listen(process.env.PORT || 2000);
-console.log("Server Started at localhost:2000")
+console.log("Server Started at localhost:2000");
 
 var SOCKET_LIST = {};
 var PLAYER_LIST = {};
-let Users = {};
 let chosenColors = [];
-var bullet_list = []
-var powerUp_list = []
-var bulletId = 0
+var bullet_list = [];
+var powerUp_list = [];
+var bulletId = 0;
 
-var global_time = 0
+var global_time = 0;
 
 var Bullet = function (id, x, y, dir, spd) {
     let bullet = {
@@ -42,14 +41,14 @@ var Bullet = function (id, x, y, dir, spd) {
     }
 
     bullet.move = function () {
-        bullet.x += Math.cos(bullet.dir) * bullet.spd
-        bullet.y += Math.sin(bullet.dir) * bullet.spd
-        bullet.age++
+        bullet.x += Math.cos(bullet.dir) * bullet.spd;
+        bullet.y += Math.sin(bullet.dir) * bullet.spd;
+        bullet.age++;
         if (bullet.age > 200) {
-            delete bullet_list[bullet.id]
+            delete bullet_list[bullet.id];
         }
     }
-    return bullet
+    return bullet;
 }
 
 var Player = function (id) {
@@ -74,25 +73,25 @@ var Player = function (id) {
 
     self.move = function () {
         if (self.blink != null && self.blink.status){
-            self.x = self.blink.x
-            self.y = self.blink.y
-            self.blink = null
-            self.powerUp = 'none'
+            self.x = self.blink.x;
+            self.y = self.blink.y;
+            self.blink = null;
+            self.powerUp = 'none';
         }
         if (self.pressRight && self.x+self.spd <=750) {
-            self.x += self.spd
+            self.x += self.spd;
         }
         if (self.pressLeft && self.x-self.spd >=0) {
-            self.x -= self.spd
+            self.x -= self.spd;
         }
         if (self.pressDown && self.y-self.spd>=0) {
-            self.y -= self.spd
+            self.y -= self.spd;
         }
         if (self.pressUp && self.y+self.spd<=500) {
-            self.y += self.spd
+            self.y += self.spd;
         }
     }
-    return self
+    return self;
 }
 
 var PowerUp = function(x,y,type){
@@ -101,68 +100,68 @@ var PowerUp = function(x,y,type){
         y:y,
         type:type
     }
-    return powerUp
+    return powerUp;
 }
 
-var io = require('socket.io') (serv, {})
+var io = require('socket.io') (serv, {});
 io.sockets.on('connection', function(socket) {
     socket.emit('updateColors', PLAYER_LIST, chosenColors);
     
-    socket.id = Math.random()
+    socket.id = Math.random();
     SOCKET_LIST[socket.id] = socket;
-    var player = Player(socket.id)
+    var player = Player(socket.id);
     PLAYER_LIST[socket.id] = player;
 
-    socket.on('signIn', function(data, clr){
-        Database.correctPass(data, function(res){
+    socket.on('signIn', function(data, clr) {
+        Database.correctPass(data, function(res) {
             if (res){
                 player.user = data.Usr;
                 player.color = clr;
-                socket.emit('signInRes', {result:true}, player, PLAYER_LIST)
+                socket.emit('signInRes', {result:true}, player, PLAYER_LIST);
             } else {
-                socket.emit('signInRes', { result: false })
+                socket.emit('signInRes', {result:false})
             }
         })
     })
 
     socket.on('signUp', function(data) {
-        Database.takenUser(data, function(res){
+        Database.takenUser(data, function(res) {
             if (res) {
-                socket.emit('signUpResponse',{success:false})
+                socket.emit('signUpRes', {result:false})
             } else {
-                Database.addUser(data, function(){
-					socket.emit('signUpResponse',{success:true});					
+                Database.addUser(data, function() {
+					socket.emit('signUpRes', {result:true});					
 				});
-                player.user = data.Usr
+                player.user = data.Usr;
             }
         })
     })
 
-    socket.on('removeAct', function(data){
-        Database.deleteUser(data)
+    socket.on('removeAct', function(data) {
+        Database.deleteUser(data);
     })
 
     socket.on('disconnect',function() {
         chosenColors.pop(PLAYER_LIST[socket.id].color);
-        delete SOCKET_LIST[socket.id]
-        delete PLAYER_LIST[socket.id]
+        delete SOCKET_LIST[socket.id];
+        delete PLAYER_LIST[socket.id];
     })
 
     socket.on('keyPress', function (data) {
         if (data.InputId == "right") {
-            player.pressRight = data.state
+            player.pressRight = data.state;
         }
         if (data.InputId == "left") {
-            player.pressLeft = data.state
+            player.pressLeft = data.state;
         }
         if (data.InputId == "up") {
-            player.pressUp = data.state
+            player.pressUp = data.state;
         }
         if (data.InputId == "down") {
-            player.pressDown = data.state
+            player.pressDown = data.state;
         }
         if (data.InputId == "space") {
-            player.pressSpace = data.state
+            player.pressSpace = data.state;
         }
     })
 
@@ -173,27 +172,27 @@ io.sockets.on('connection', function(socket) {
     })
 
     socket.on('msgServ', function (data) {
-        let playerName = player.user
-        let playerColor = player.color
+        let playerName = player.user;
+        let playerColor = player.color;
         for (let i in SOCKET_LIST) {
-            SOCKET_LIST[i].emit('addToChat', playerColor, playerName + ": " + data)
+            SOCKET_LIST[i].emit('addToChat', playerColor, playerName + ": " + data);
         }
     })
     socket.on('evalServ', function (data) {
-        let ans = eval(data)
-        socket.emit('evalAns', ans)
+        let ans = eval(data);
+        socket.emit('evalAns', ans);
     })
 
-    socket.on('readyUp', function(){
-        player.ready = true
-        let ready = true
-        for (var p in PLAYER_LIST){
-            if(!PLAYER_LIST[p].ready){
-                ready = false
+    socket.on('readyUp', function() {
+        player.ready = true;
+        let ready = true;
+        for (var p in PLAYER_LIST) {
+            if(!PLAYER_LIST[p].ready) {
+                ready = false;
             }
         }
         if(ready){
-            startGame()
+            startGame();
         }
     })
 })
@@ -202,27 +201,27 @@ function startGame(){
     setInterval(function () {
         global_time += 5;
     
-        var bullet_package = []
-        var player_package = []
-        var powerUp_package = []
-        let allDead = true
+        var bullet_package = [];
+        var player_package = [];
+        var powerUp_package = [];
+        let allDead = true;
         for (var p in PLAYER_LIST) {
-            var player = PLAYER_LIST[p]
+            var player = PLAYER_LIST[p];
             if (player.pressSpace && player.powerUp == 'barrier') {
                 for (var b in bullet_list) {
-                    var bullet = bullet_list[b]
-                    if (distance(player.x, player.y, bullet.x, bullet.y) <= 100){
-                        delete bullet_list[b]
+                    var bullet = bullet_list[b];
+                    if (distance(player.x, player.y, bullet.x, bullet.y) <= 100) {
+                        delete bullet_list[b];
                     }
                 }
-                player.powerUp = 'none'
+                player.powerUp = 'none';
             }
-            if (!player.dead){
-                allDead = false
+            if (!player.dead) {
+                allDead = false;
             }
 
             if (!player.dead) {
-                player.move()
+                player.move();
                 player_package.push({
                     x: player.x,
                     y: player.y,
@@ -233,76 +232,76 @@ function startGame(){
             }
         }
         if(allDead) {
-            for(var i in SOCKET_LIST){
-                SOCKET_LIST[i].emit('addToChat','white', "Game Over")
+            for(var i in SOCKET_LIST) {
+                SOCKET_LIST[i].emit('addToChat','white', "Game Over");
             }
-            clearInterval(this)
-            resetGame()
+            clearInterval(this);
+            resetGame();
         }
         for (var b in bullet_list) {
-            var bullet = bullet_list[b]
-            bullet.move()
+            var bullet = bullet_list[b];
+            bullet.move();
             bullet_package.push({
                 x: bullet.x,
                 y: bullet.y
             })
         }
         for (var b in bullet_list) {
-            var bullet = bullet_list[b]
+            var bullet = bullet_list[b];
             for (var p in PLAYER_LIST) {
                 var player = PLAYER_LIST[p]
                 if (!player.dead && distance(player.x, player.y, bullet.x, bullet.y) <= 15) {
-                    player.dead = true
-                    for(var i in SOCKET_LIST){
-                        SOCKET_LIST[i].emit('addToChat', player.color, player.user + " died!")
+                    player.dead = true;
+                    for(var i in SOCKET_LIST) {
+                        SOCKET_LIST[i].emit('addToChat', player.color, player.user + " died!");
                     }
                 }
             }
         }
         for (var p in powerUp_list) {
-            var power = powerUp_list[p]
+            var power = powerUp_list[p];
             for(var j in PLAYER_LIST) {
-                var player = PLAYER_LIST[j]
-                if (distance(power.x, power.y, player.x, player.y) <=25){
-                    player.powerUp = power.type
-                    delete powerUp_list[p]
+                var player = PLAYER_LIST[j];
+                if (distance(power.x, power.y, player.x, player.y) <=25) {
+                    player.powerUp = power.type;
+                    delete powerUp_list[p];
                 }
             }
-            powerUp_package.push(power)
+            powerUp_package.push(power);
         }
     
         if (global_time % 10 == 0) {
-            let pos = getBulletStart()
-            var bullet = Bullet(bulletId++, pos.x, pos.y, pos.dir, 10)
-            bullet_list.push(bullet)
+            let pos = getBulletStart();
+            var bullet = Bullet(bulletId++, pos.x, pos.y, pos.dir, 10);
+            bullet_list.push(bullet);
         }
 
         if (global_time % 1000 == 0) {
-            let pos = getPowerUpStart()
-            var power = PowerUp(pos.x, pos.y, pos.type)
-            powerUp_list.push(power)
+            let pos = getPowerUpStart();
+            var power = PowerUp(pos.x, pos.y, pos.type);
+            powerUp_list.push(power);
         }
 
         for (var i in SOCKET_LIST) {
-            var socket = SOCKET_LIST[i]
-            let package = { players: player_package, bullets: bullet_package, powerUps: powerUp_package}
-            socket.emit('newPostions', package)
+            var socket = SOCKET_LIST[i];
+            let package = { players: player_package, bullets: bullet_package, powerUps: powerUp_package};
+            socket.emit('newPostions', package);
         }
     }, 20)
 }
 
-function resetGame(){
-    for (var p in PLAYER_LIST){
-        let player = PLAYER_LIST[p]
-        player.ready = false
-        player.dead= false
-        player.x = 375
-        player.y = 250
-        player.powerUp = 'none'
+function resetGame( ){
+    for (var p in PLAYER_LIST) {
+        let player = PLAYER_LIST[p];
+        player.ready = false;
+        player.dead= false;
+        player.x = 375;
+        player.y = 250;
+        player.powerUp = 'none';
     }
-    bullet_list = []
-    powerUp_list = []
-    global_time = 0
+    bullet_list = [];
+    powerUp_list = [];
+    global_time = 0;
 }
 
 function getRandomColor() {
@@ -315,7 +314,7 @@ function getRandomColor() {
 }
 
 function getBulletStart() {
-    let options = Math.floor(Math.random() * Math.floor(4))
+    let options = Math.floor(Math.random() * Math.floor(4));
     switch (options) {
         case 0:
             return {
@@ -345,8 +344,8 @@ function getBulletStart() {
 }
 
 function getPowerUpStart() {
-    let options =  Math.floor(Math.random() * Math.floor(2))
-    switch(options){
+    let options =  Math.floor(Math.random() * Math.floor(2));
+    switch(options) {
         case 0:
             return {
                 x: Math.random() * (750-1) +1,
@@ -363,5 +362,5 @@ function getPowerUpStart() {
 }
 
 function distance(x1, y1, x2, y2) {
-    return Math.sqrt((x2 - x1)*(x2 - x1)  + (y2 - y1)*(y2 - y1))
+    return Math.sqrt((x2 - x1)*(x2 - x1)  + (y2 - y1)*(y2 - y1));
 }
