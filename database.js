@@ -1,4 +1,3 @@
-const { data } = require("jquery");
 var mongojs = require("mongojs")
 
 //var _database = mongojs('localhost:27017/dodge', ['account'])
