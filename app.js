@@ -26,27 +26,22 @@ var PLAYER_LIST = {};
 let chosenColors = [];
 var bullet_list = [];
 var powerUp_list = [];
-var bulletId = 0;
 
 var global_time = 0;
 
-var Bullet = function (id, x, y, dir, spd) {
+var Bullet = function (x, y, dir, spd) {
     let bullet = {
         x: x,
         y: y,
         dir: dir,
         spd: spd,
-        age: 0,
-        id: id
+        age: 0
     }
 
     bullet.move = function () {
-        bullet.x += Math.cos(bullet.dir) * bullet.spd;
-        bullet.y += Math.sin(bullet.dir) * bullet.spd;
-        bullet.age++;
-        if (bullet.age > 200) {
-            delete bullet_list[bullet.id];
-        }
+        bullet.x += Math.cos(bullet.dir) * bullet.spd
+        bullet.y += Math.sin(bullet.dir) * bullet.spd
+        bullet.age++
     }
     return bullet;
 }
@@ -54,7 +49,6 @@ var Bullet = function (id, x, y, dir, spd) {
 var Player = function (id) {
     var self = {
         user: "",
-        pass: "",
         x: 375,
         y: 250,
         color: "",
@@ -67,57 +61,68 @@ var Player = function (id) {
         spd: 10,
         dead: false,
         ready: false,
-        powerUp:'none',
-        blink:null
+        powerUp: 'none',
+        blink: null,
+        playing: false
     }
 
     self.move = function () {
-        if (self.blink != null && self.blink.status){
-            self.x = self.blink.x;
-            self.y = self.blink.y;
-            self.blink = null;
-            self.powerUp = 'none';
+        if (self.blink != null && self.blink.status) {
+            self.x = self.blink.x
+            self.y = self.blink.y
+            self.blink = null
+            self.powerUp = 'none'
         }
-        if (self.pressRight && self.x+self.spd <=750) {
-            self.x += self.spd;
+        if (self.pressRight && self.x + self.spd <= 750) {
+            self.x += self.spd
         }
-        if (self.pressLeft && self.x-self.spd >=0) {
-            self.x -= self.spd;
+        if (self.pressLeft && self.x - self.spd >= 0) {
+            self.x -= self.spd
         }
-        if (self.pressDown && self.y-self.spd>=0) {
-            self.y -= self.spd;
+        if (self.pressDown && self.y - self.spd >= 0) {
+            self.y -= self.spd
         }
-        if (self.pressUp && self.y+self.spd<=500) {
-            self.y += self.spd;
+        if (self.pressUp && self.y + self.spd <= 500) {
+            self.y += self.spd
         }
     }
     return self;
 }
 
-var PowerUp = function(x,y,type){
+var PowerUp = function (x, y, type) {
     var powerUp = {
-        x:x,
-        y:y,
-        type:type
+        x: x,
+        y: y,
+        type: type
     }
     return powerUp;
 }
 
-var io = require('socket.io') (serv, {});
-io.sockets.on('connection', function(socket) {
+var io = require('socket.io')(serv, {})
+io.sockets.on('connection', function (socket) {
     socket.emit('updateColors', PLAYER_LIST, chosenColors);
-    
-    socket.id = Math.random();
+
+
+    socket.id = Math.random()
     SOCKET_LIST[socket.id] = socket;
     var player = Player(socket.id);
     PLAYER_LIST[socket.id] = player;
 
-    socket.on('signIn', function(data, clr) {
-        Database.correctPass(data, function(res) {
-            if (res){
+    socket.on('signIn', function (data, clr) {
+        for (var p in PLAYER_LIST) {
+            if (data.Usr == PLAYER_LIST[p].user) {
+                return socket.emit('signInRes', { result: false })
+            }
+        }
+        Database.correctPass(data, function (res) {
+            if (res) {
                 player.user = data.Usr;
                 player.color = clr;
-                socket.emit('signInRes', {result:true}, player, PLAYER_LIST);
+                socket.emit('signInRes', { result: true }, player, PLAYER_LIST)
+                Database.getWins(player.user, (res) => {
+                    socket.emit('newWins', player.user, res)
+                })
+
             } else {
                 socket.emit('signInRes', {result:false})
             }
@@ -138,10 +143,14 @@ io.sockets.on('connection', function(socket) {
     })
 
     socket.on('removeAct', function(data) {
-        Database.deleteUser(data);
+        Database.deleteUser(data, function(res){
+            if (res){
+                socket.emit('removeActRes', res)
+            }
+        });
     })
 
-    socket.on('disconnect',function() {
+    socket.on('disconnect', function () {
         chosenColors.pop(PLAYER_LIST[socket.id].color);
         delete SOCKET_LIST[socket.id];
         delete PLAYER_LIST[socket.id];
@@ -165,9 +174,9 @@ io.sockets.on('connection', function(socket) {
         }
     })
 
-    socket.on('canvasClick', function(x,y){
+    socket.on('canvasClick', function (x, y) {
         if (player.powerUp == 'blink') {
-            player.blink = {status:true, x:x, y:y}
+            player.blink = { status: true, x: x, y: y }
         }
     })
 
@@ -183,41 +192,45 @@ io.sockets.on('connection', function(socket) {
         socket.emit('evalAns', ans);
     })
 
-    socket.on('readyUp', function() {
-        player.ready = true;
-        let ready = true;
+    socket.on('readyUp', function () {
+        player.ready = true
+        let ready = true
         for (var p in PLAYER_LIST) {
-            if(!PLAYER_LIST[p].ready) {
-                ready = false;
+            if (!PLAYER_LIST[p].ready) {
+                ready = false
             }
         }
-        if(ready){
-            startGame();
+        if (ready) {
+            startGame()
         }
     })
 })
 
-function startGame(){
+function startGame() {
+    for (var p in PLAYER_LIST) {
+        PLAYER_LIST[p].playing = true
+    }
+
     setInterval(function () {
         global_time += 5;
-    
-        var bullet_package = [];
-        var player_package = [];
-        var powerUp_package = [];
-        let allDead = true;
+
+        var bullet_package = []
+        var player_package = []
+        var powerUp_package = []
+        let alive = Object.size(PLAYER_LIST)
         for (var p in PLAYER_LIST) {
             var player = PLAYER_LIST[p];
             if (player.pressSpace && player.powerUp == 'barrier') {
                 for (var b in bullet_list) {
-                    var bullet = bullet_list[b];
+                    var bullet = bullet_list[b]
                     if (distance(player.x, player.y, bullet.x, bullet.y) <= 100) {
-                        delete bullet_list[b];
+                        delete bullet_list[b]
                     }
                 }
                 player.powerUp = 'none';
             }
-            if (!player.dead) {
-                allDead = false;
+            if (player.dead) {
+                alive--
             }
 
             if (!player.dead) {
@@ -231,13 +244,26 @@ function startGame(){
                 })
             }
         }
-        if(allDead) {
-            for(var i in SOCKET_LIST) {
-                SOCKET_LIST[i].emit('addToChat','white', "Game Over!");
+        if (alive <= 1) {
+            let winner
+            for (var t in PLAYER_LIST) {
+                if (!PLAYER_LIST[t].dead) {
+                    winner = PLAYER_LIST[t]
+                }
             }
-            clearInterval(this);
-            resetGame();
+
+            for (var i in SOCKET_LIST) {
+                if (winner == null) {
+                    SOCKET_LIST[i].emit('addToChat', 'white', "Game Over.")
+                } else {
+                    SOCKET_LIST[i].emit('addToChat', 'white', "Game Over, " + winner.user + " wins.")
+                }
+            }
+            clearInterval(this)
+            resetGame(winner)
         }
+
+        bullet_list = bullet_list.filter(elem => elem.age <= 200)
         for (var b in bullet_list) {
             var bullet = bullet_list[b];
             bullet.move();
@@ -251,9 +277,9 @@ function startGame(){
             for (var p in PLAYER_LIST) {
                 var player = PLAYER_LIST[p]
                 if (!player.dead && distance(player.x, player.y, bullet.x, bullet.y) <= 15) {
-                    player.dead = true;
-                    for(var i in SOCKET_LIST) {
-                        SOCKET_LIST[i].emit('addToChat', player.color, player.user + " died!");
+                    player.dead = true
+                    for (var i in SOCKET_LIST) {
+                        SOCKET_LIST[i].emit('addToChat', player.color, player.user + " died!")
                     }
                 }
             }
@@ -269,10 +295,10 @@ function startGame(){
             }
             powerUp_package.push(power);
         }
-    
+
         if (global_time % 10 == 0) {
             let pos = getBulletStart();
-            var bullet = Bullet(bulletId++, pos.x, pos.y, pos.dir, 10);
+            var bullet = Bullet(pos.x, pos.y, pos.dir, 10);
             bullet_list.push(bullet);
         }
 
@@ -290,27 +316,30 @@ function startGame(){
     }, 20)
 }
 
-function resetGame( ){
+function resetGame(winner) {
+    if (winner != null) {
+        Database.updateWins(winner.user, function () {
+            for (var s in SOCKET_LIST) {
+                Database.getWins(PLAYER_LIST[s].user, (res) => {
+                    SOCKET_LIST[s].emit('newWins', PLAYER_LIST[s].user, res)
+                })
+
+            }
+        })
+    }
+
     for (var p in PLAYER_LIST) {
-        let player = PLAYER_LIST[p];
-        player.ready = false;
-        player.dead= false;
-        player.x = 375;
-        player.y = 250;
-        player.powerUp = 'none';
+        let player = PLAYER_LIST[p]
+        player.ready = false
+        player.dead = false
+        player.playing = false
+        player.x = 375
+        player.y = 250
+        player.powerUp = 'none'
     }
     bullet_list = [];
     powerUp_list = [];
     global_time = 0;
-}
-
-function getRandomColor() {
-    var letters = '0123456789ABCDEF';
-    var color = '#';
-    for (var i = 0; i < 6; i++) {
-        color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
 }
 
 function getBulletStart() {
@@ -348,19 +377,28 @@ function getPowerUpStart() {
     switch(options) {
         case 0:
             return {
-                x: Math.random() * (750-1) +1,
-                y: Math.random() * (500-1) +1,
+                x: Math.random() * (750 - 1) + 1,
+                y: Math.random() * (500 - 1) + 1,
                 type: 'barrier'
             }
-        case 1: 
+        case 1:
             return {
-                x: Math.random() * (750-1) +1,
-                y: Math.random() * (500-1) +1,
+                x: Math.random() * (750 - 1) + 1,
+                y: Math.random() * (500 - 1) + 1,
                 type: 'blink'
-            }   
+            }
     }
 }
 
 function distance(x1, y1, x2, y2) {
-    return Math.sqrt((x2 - x1)*(x2 - x1)  + (y2 - y1)*(y2 - y1));
+    return Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1))
 }
+
+Object.size = function (obj) {
+    var size = 0, key;
+    for (key in obj) {
+        if (obj.hasOwnProperty(key)) size++;
+    }
+    return size;
+}
+

@@ -4,6 +4,10 @@
 </head>
 
 <body>
+    <!-- <div id = "info">🛈</div>
+    <div id= "infocard" >
+        sdf;lkdsfjglfdsjkgjfds;gdfjgkjfg;lkdsj;lkgjfdglkds
+    </div> -->
     <div id="login">
         <label for="inputUser">Username</label>
         <input id="inputUser" type="text"> </input> <br>
@@ -11,16 +15,20 @@
         <input id="inputPass" type = text> </input> <br>
         <button id="signIn"> Sign In </button>
         <button id="signUp"> Sign Up </button>
+        <br>
         <button id="removeAct"> Delete Account</button>
+        <br>
         <label for="colors">Pick a color: </label>
         <select name="colors" id="colors" style='width: 60px'></select>
-        <p id='sucsignup' style='color: #32CD32; display: none; margin-bottom: -5px'>Successfully created account, Log in.</p>
-        <p id='failsignup' style='color: red; display: none; margin-bottom: -5px'>Error creating account, Try again later.</p>
-        <p id='failsignin' style='color: red; display: none; margin-bottom: -5px'>Error signing in, Try creating an account first.</p>
+        <p id='sucsignup' style='color: #32CD32; display: none; margin-bottom: -5px'>Successfully created<br>account, Log in.</p>
+        <p id='failsignup' style='color: red; display: none; margin-bottom: -5px'>Error creating account, <br>Try again later.</p>
+        <p id='failsignin' style='color: red; display: none; margin-bottom: -5px'>Error signing in, <br>Try creating an account first.</p>
         <p id='delacct' style='color: #ffa500; display: none; margin-bottom: -5px'>Account deleted.</p>
+        <p id='faildelacct' style='color: #ffa500; display: none; margin-bottom: -5px'>Account does<br>not exist.</p>
     </div>
 
     <div id="game" style="display:none">
+        <div id="playerWins"></div>
         <div id=wrapper>
             <div id=gameContainer>
                 <div id="chatText" style="width:150px;height:499.5px;overflow-y:scroll;"></div>
@@ -72,6 +80,16 @@
         let delacct = document.getElementById('delacct') // del msg
         let removeAct = document.getElementById("removeAct")
         let failSignIn = document.getElementById("failsignin")
+        let faildelacct = document.getElementById('faildelacct')
+
+        let playerWins = document.getElementById("playerWins")
+        let infocard = document.getElementById("infocard")
+
+
+        // infocard.onmouseenter = function(){
+        //     infocard.classList.add('infoactive')
+        // }
+
 
         // Send Username and Password to the Server for signing up and signing in
         signIn.onclick = function () {
@@ -83,10 +101,6 @@
         }
         removeAct.onclick = function(e) {
             socket.emit('removeAct', {Usr: user.value, Pas: pass.value});
-            sucSignUp.style.display = 'none';
-            failSignUp.style.display = 'none';
-            failSignIn.style.display = 'none';
-            delacct.style.display = 'block';
         }
 
         document.getElementById('readyButton').onclick = function () {
@@ -113,6 +127,7 @@
                 failSignUp.style.display = 'none';
                 delacct.style.display = 'none';
                 failSignIn.style.display = 'block';
+                faildelacct.style.display = 'none'
             }
         })
 
@@ -120,6 +135,7 @@
             if (data.result) {
                 failSignUp.style.display = 'none';
                 delacct.style.display = 'none';
+                faildelacct.style.display = 'none'
                 failSignIn.style.display = 'none';
                 sucSignUp.style.display ='block';
             } else {
@@ -127,7 +143,28 @@
                 delacct.style.display = 'none';
                 failSignIn.style.display = 'none';
                 failSignUp.style.display ='block';
+                faildelacct.style.display = 'none'
             }
+        })
+        
+        socket.on('removeActRes', function (data) {
+            if (data.result) {
+                sucSignUp.style.display = 'none';
+                failSignUp.style.display = 'none';
+                failSignIn.style.display = 'none';
+                delacct.style.display = 'block';
+                faildelacct.style.display = 'none'
+            } else {
+                sucSignUp.style.display = 'none';
+                delacct.style.display = 'none';
+                failSignIn.style.display = 'none';
+                failSignUp.style.display ='none';
+                faildelacct.style.display = 'block'
+            }
+        })
+
+        socket.on('newWins', function(name, wins){
+            playerWins.innerHTML = name + " Wins: " + wins
         })
 
         // Game Page Elements
@@ -147,7 +184,7 @@
         socket.on('addToChat', function (color, data) {
             chatInput.value = "";
             chatText.innerHTML += '<div class="msg" style="opacity:1; font-weight: bold; background-color: ' + color + '">' + data + '</div>';
-            if (data == 'Game Over!') {
+            if (data.substring(0,9) == 'Game Over' ) {
                 document.getElementById('readyButton').display = 'inline-block';
             }
         })
