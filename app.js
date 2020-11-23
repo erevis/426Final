@@ -233,7 +233,7 @@ function startGame(){
         }
         if(allDead) {
             for(var i in SOCKET_LIST) {
-                SOCKET_LIST[i].emit('addToChat','white', "Game Over");
+                SOCKET_LIST[i].emit('addToChat','white', "Game Over!");
             }
             clearInterval(this);
             resetGame();

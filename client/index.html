@@ -90,6 +90,7 @@
         }
 
         document.getElementById('readyButton').onclick = function () {
+            document.getElementById('readyButton').display = 'none';
             socket.emit('readyUp');
         }
 
@@ -144,9 +145,10 @@
 
         // When the server tells the client to add message, client adds to the chat and and clears the chat box
         socket.on('addToChat', function (color, data) {
-            if (chatInput.value != "") {
-                chatInput.value = "";
-                chatText.innerHTML += '<div class="msg" style="opacity:1; font-weight: bold; background-color: ' + color + '">' + data + '</div>';
+            chatInput.value = "";
+            chatText.innerHTML += '<div class="msg" style="opacity:1; font-weight: bold; background-color: ' + color + '">' + data + '</div>';
+            if (data == 'Game Over!') {
+                document.getElementById('readyButton').display = 'inline-block';
             }
         })
 
@@ -160,7 +162,7 @@
             event.preventDefault()
             if (chatInput.value[0] === '.') {
                 socket.emit('evalServ', chatInput.value.slice(1));
-            } else {
+            } else if (chatInput.value != '') {
                 socket.emit('msgServ', chatInput.value);
             }
         }
