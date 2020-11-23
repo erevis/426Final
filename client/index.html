@@ -4,6 +4,10 @@
 </head>
 
 <body>
+    <!-- <div id = "info">🛈</div>
+    <div id= "infocard" >
+        sdf;lkdsfjglfdsjkgjfds;gdfjgkjfg;lkdsj;lkgjfdglkds
+    </div> -->
     <div id="login">
         <label for="inputUser">Username</label>
         <input id="inputUser" type="text"> </input> <br>
@@ -11,13 +15,16 @@
         <input id="inputPass" type = text> </input> <br>
         <button id="signIn"> Sign In </button>
         <button id="signUp"> Sign Up </button>
+        <br>
         <button id="removeAct"> Delete Account</button>
+        <br>
         <label for="colors">Pick a color: </label>
         <select name="colors" id="colors">
         </select>
     </div>
 
     <div id="game" style="display:none">
+        <div id="playerWins"></div>
         <div id=wrapper>
             <div id=gameContainer>
                 <div id="chatText" style="width:150px;height:499.5px;overflow-y:scroll;"></div>
@@ -65,6 +72,13 @@
         let signIn = document.getElementById("signIn")
         let signUp = document.getElementById("signUp")
         let removeAct = document.getElementById("removeAct")
+        let playerWins = document.getElementById("playerWins")
+        let infocard = document.getElementById("infocard")
+
+        // infocard.onmouseenter = function(){
+        //     infocard.classList.add('infoactive')
+        // }
+
 
         // Send Username and Password to the Server for signing up and signing in
         signIn.onclick = function () {
@@ -104,6 +118,10 @@
                 login.style.display = "none"
                 game.style.display = "inline-block"
             }
+        })
+
+        socket.on('newWins', function(name, wins){
+            playerWins.innerHTML = name + " Wins: " + wins
         })
 
         // Game Page Elements

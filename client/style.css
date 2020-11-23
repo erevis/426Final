@@ -55,7 +55,7 @@ body {
     padding: 0.4em 1.25em;
     border: none;
     margin: 1em 1em 0.3em 0;
-    font-family: 'Roboto',sans-serif;
+    font-family: "Courier New";
     font-size: 15px;
     color:#000000;
     background-color: #FFD700; 
@@ -88,6 +88,7 @@ body {
     padding:20px;
     line-height:0;
     transition:all 0.3s;
+    font-family: "Courier New";
 }
 
 #signIn:hover {
@@ -113,6 +114,9 @@ body {
     padding:20px;
     line-height:0;
     transition:all 0.3s;
+    font-family: "Courier New";
+    margin: auto;
+    width: 70%;
 }
 
 #removeAct:hover {
@@ -138,6 +142,7 @@ body {
     padding:20px;
     line-height:0;
     transition:all 0.3s;
+    font-family: "Courier New";
 }
 #signUp:hover {
     box-shadow:0 -5px 10px #3455C1 inset;
@@ -165,4 +170,45 @@ input[type=text] {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+}
+
+#playerWins{
+    position: absolute;
+    top: 0px;
+    right:0px;
+    width: 10%;
+    height:5%;
+    background-color: teal;
+}
+
+div {
+    font-family: "Courier New";
+}
+
+#colors {
+    font-family: "Courier New";
+    margin: auto;
+    width: 40%;
+}
+
+#info {
+    position: absolute;
+    height: 40px;
+    width: 40px;
+    top: 10px;
+    left: 10px;
+    background-color: teal;
+    border-radius: 5px;
+    font-size: 30px;
+    color: white;
+    text-align: center;
+}
+
+.infoactive{
+    display: inline;
+}
+
+#infocard{
+    background-color: white;
+    opacity: .6;
 }

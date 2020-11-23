@@ -31,10 +31,25 @@ Database.addUser = function(data, callback) {
         if (err) throw err
         callback()
 	})
+	_database.wins.insert({username:data.Usr,wins:0})
 }
 
 Database.deleteUser = function(data) {
     _database.account.remove({username:data.Usr, password:data.Pas}, function(err){
         if (err) throw err
-    })
+	})
+	_database.wins.remove({username:data.Usr})
+}
+
+Database.updateWins = function(data, callback) {
+	_database.wins.findOne({username:data}, function(err, res){
+		_database.wins.update({username:data}, { $set: {wins: res.wins+1} }, {upsert:true},callback())
+	})
+
+}
+
+Database.getWins = function(data, callback) {
+	_database.wins.findOne({username:data}, function(err, res){
+		callback(res.wins)
+	})
 }
