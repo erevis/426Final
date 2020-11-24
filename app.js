@@ -196,9 +196,9 @@ io.sockets.on('connection', function (socket) {
     })
 
     socket.on('readyUp', function () {
-        readyCnt++;
-        io.sockets.emit('readyCnt', readyCnt, connectCnt);
         if (!playing) {
+            readyCnt++;
+            io.sockets.emit('readyCnt', readyCnt, connectCnt);
             if (readyCnt == connectCnt) {
                 timerStarted = false;
                 clearTimeout(timer);
