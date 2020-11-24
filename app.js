@@ -1,9 +1,3 @@
-
-// Uses socket.io to send and recieve information(packages) between client and server
-// Use socket.emit() and socket.on() to send the 
-
-//Setting Up NodeJS 
-
 require("./database");
 const e = require('express');
 var express = require('express');
@@ -28,10 +22,6 @@ var bullet_list = [];
 var powerUp_list = [];
 var playing = false
 var global_time = 0;
-var connectCnt = 0;
-var readyCnt = 0;
-var timer;
-var timerStarted = false;
 
 var Bullet = function (x, y, dir, spd) {
     let bullet = {
@@ -104,10 +94,8 @@ var PowerUp = function (x, y, type) {
 
 var io = require('socket.io')(serv, {})
 io.sockets.on('connection', function (socket) {
-    connectCnt++;
-    io.sockets.emit('connectCnt', readyCnt, connectCnt);
-
     socket.emit('updateColors', PLAYER_LIST, chosenColors);
+
 
     socket.id = Math.random()
     SOCKET_LIST[socket.id] = socket;
@@ -124,6 +112,7 @@ io.sockets.on('connection', function (socket) {
                 Database.getWins(player.user, (res) => {
                     socket.emit('newWins', player.user, res)
                 })
+
             } else {
                 socket.emit('signInRes', { result: false })
             }
@@ -152,8 +141,6 @@ io.sockets.on('connection', function (socket) {
     })
 
     socket.on('disconnect', function () {
-        connectCnt--;
-        io.sockets.emit('connectCnt', readyCnt, connectCnt);
         chosenColors.pop(PLAYER_LIST[socket.id].color);
         delete SOCKET_LIST[socket.id];
         delete PLAYER_LIST[socket.id];
@@ -201,31 +188,8 @@ io.sockets.on('connection', function (socket) {
             for (let i in SOCKET_LIST) {
                 SOCKET_LIST[i].emit('addToChat', 'white', "Game starts in 5 seconds.");
             }
-            playing = true;
+            playing = true
         }
-        // if (!playing) {
-        //     readyCnt++;
-        //     io.sockets.emit('readyCnt', readyCnt, connectCnt);
-        //     if (readyCnt == connectCnt) {
-        //         timerStarted = false;
-        //         clearTimeout(timer);
-        //         // console.log("cleared")
-        //         playing = true;
-        //         startGame(io.sockets);
-        //     } else {
-        //         timer = setTimeout(function() {
-        //             playing = true;
-        //             timerStarted = false;
-        //             startGame(io.sockets);
-        //         }, 5000)
-        //         if (!timerStarted) {
-        //             for (let i in SOCKET_LIST) {
-        //                 SOCKET_LIST[i].emit('addToChat', 'white', "Game starts in 5 seconds.");
-        //             }
-        //         }
-        //         timerStarted = true;
-        //     }
-        // }
     })
 
     socket.on('autofill', function(chat) {
@@ -242,7 +206,7 @@ io.sockets.on('connection', function (socket) {
     })
 })
 
-function startGame(sct) {
+function startGame() {
     for (var p in PLAYER_LIST) {
         PLAYER_LIST[p].playing = true
     }
@@ -295,9 +259,6 @@ function startGame(sct) {
                     SOCKET_LIST[i].emit('addToChat', 'white', "Game Over, " + winner.user + " wins.")
                 }
             }
-            sct.emit('gameEnd')
-            readyCnt = 0;
-            sct.emit('readyCnt', readyCnt, connectCnt);
             clearInterval(this)
             playing = false
             resetGame(winner)
