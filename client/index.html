@@ -19,7 +19,7 @@
         <button id="removeAct"> Delete Account</button>
         <br>
         <label for="colors">Pick a color: </label>
-        <select name="colors" id="colors" style='width: 60px'></select>
+        <select name="colors" id="colors" style='width: 100px'></select>
         <p id='sucsignup' style='color: #32CD32; display: none; margin-bottom: -5px'>Successfully created<br>account, Log in.</p>
         <p id='failsignup' style='color: red; display: none; margin-bottom: -5px'>Error creating account, <br>Try again later.</p>
         <p id='failsignin' style='color: red; display: none; margin-bottom: -5px'>Error signing in, <br>Try creating an account first.</p>
@@ -39,7 +39,9 @@
             </div>
     
             <form id = "chatForm">
-                <input id="chatInput" type="text" style="width:906px"></input> 
+                <div id='autofill'>
+                    <input id="chatInput" type="text" style="width:906px"></input> 
+                </div>
             </form>
         </div>
     </div>
@@ -81,10 +83,10 @@
         let removeAct = document.getElementById("removeAct")
         let failSignIn = document.getElementById("failsignin")
         let faildelacct = document.getElementById('faildelacct')
-
         let playerWins = document.getElementById("playerWins")
         let infocard = document.getElementById("infocard")
-
+        let chat = document.getElementById('chatInput')
+        let autoFill = document.getElementById('autofill')
 
         // infocard.onmouseenter = function(){
         //     infocard.classList.add('infoactive')
@@ -103,8 +105,65 @@
             socket.emit('removeAct', {Usr: user.value, Pas: pass.value});
         }
 
+        const debounce = (func, delay) => { 
+            let debounceTimer 
+            return function() { 
+                const context = this
+                const args = arguments 
+                clearTimeout(debounceTimer) 
+                debounceTimer = setTimeout(() => func.apply(context, args), delay) 
+            } 
+        }  
+
+        const inputHandler = function(e) {
+            socket.emit('autofill', e);
+        }
+
+        socket.on('autofillres', function(data) {
+            closeSuggestions();
+            let oldContainer = document.getElementsByClassName('autofillitems');
+            // console.log(autoFill.childNodes[3])
+            if (typeof(oldContainer) != 'undefined' && oldContainer != null)
+                autoFill.removeChild[oldContainer];
+
+            let autoFillContainer = document.createElement('div');
+            autoFillContainer.className = 'autofillitems';
+            autoFill.append(autoFillContainer);
+
+            let count = 0;
+            data.forEach(function(elem) {
+                if (count < 8) {
+                    let suggest = document.createElement('div');
+                    suggest.innerHTML = elem;
+
+                    suggest.addEventListener("click", function(e) {
+                        chat.value = elem;
+                        closeSuggestions(chat.vlue);
+                    });
+                    autoFillContainer.append(suggest);
+                }
+                count++;
+            })
+        })
+
+        function closeSuggestions(elmnt) {
+            var x = document.getElementsByClassName("autofillitems");
+            for (var i = 0; i < x.length; i++) {
+                if (elmnt != x[i]) {
+                    x[i].parentNode.removeChild(x[i]);
+                }
+            }
+        }
+
+        chat.addEventListener('input', debounce(function() {
+            if (chat.value.substring(0,1) == '@') {
+                inputHandler(chat.value.substring(1, chat.length));
+            }
+        }, 200));
+
         document.getElementById('readyButton').onclick = function () {
-            document.getElementById('readyButton').display = 'none';
+            document.getElementById('readyButton').style.display = 'none';
+            closeSuggestions();
             socket.emit('readyUp');
         }
 
@@ -183,9 +242,9 @@
         // When the server tells the client to add message, client adds to the chat and and clears the chat box
         socket.on('addToChat', function (color, data) {
             chatInput.value = "";
-            chatText.innerHTML += '<div class="msg" style="opacity:1; font-weight: bold; background-color: ' + color + '">' + data + '</div>';
+            chatText.innerHTML += '<div class="msg" style="opacity:1; background-color: ' + color + '">' + data + '</div>';
             if (data.substring(0,9) == 'Game Over' ) {
-                document.getElementById('readyButton').display = 'inline-block';
+                document.getElementById('readyButton').style.display = 'inline-block';
             }
         })
 

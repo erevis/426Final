@@ -212,6 +212,19 @@ io.sockets.on('connection', function (socket) {
             startGame()
         }
     })
+
+    socket.on('autofill', function(chat) {
+        let playerList = [];
+        for (let p in PLAYER_LIST) {
+            if(PLAYER_LIST[p].user.includes(chat.substring(1,chat.length))) {
+                playerList.push(PLAYER_LIST[p].user);
+            }
+        }
+        playerList.sort(function(a, b) {
+            return a.length - b.length;
+        })
+        socket.emit('autofillres', playerList);
+    })
 })
 
 function startGame() {
