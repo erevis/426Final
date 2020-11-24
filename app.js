@@ -196,29 +196,36 @@ io.sockets.on('connection', function (socket) {
     })
 
     socket.on('readyUp', function () {
-        if (!playing) {
-            readyCnt++;
-            io.sockets.emit('readyCnt', readyCnt, connectCnt);
-            if (readyCnt == connectCnt) {
-                timerStarted = false;
-                clearTimeout(timer);
-                // console.log("cleared")
-                playing = true;
-                startGame(io.sockets);
-            } else {
-                timer = setTimeout(function() {
-                    playing = true;
-                    timerStarted = false;
-                    startGame(io.sockets);
-                }, 5000)
-                if (!timerStarted) {
-                    for (let i in SOCKET_LIST) {
-                        SOCKET_LIST[i].emit('addToChat', 'white', "Game starts in 5 seconds.");
-                    }
-                }
-                timerStarted = true;
+        if (!playing){
+            setTimeout(startGame, 5000)
+            for (let i in SOCKET_LIST) {
+                SOCKET_LIST[i].emit('addToChat', 'white', "Game starts in 5 seconds.");
             }
+            playing = true;
         }
+        // if (!playing) {
+        //     readyCnt++;
+        //     io.sockets.emit('readyCnt', readyCnt, connectCnt);
+        //     if (readyCnt == connectCnt) {
+        //         timerStarted = false;
+        //         clearTimeout(timer);
+        //         // console.log("cleared")
+        //         playing = true;
+        //         startGame(io.sockets);
+        //     } else {
+        //         timer = setTimeout(function() {
+        //             playing = true;
+        //             timerStarted = false;
+        //             startGame(io.sockets);
+        //         }, 5000)
+        //         if (!timerStarted) {
+        //             for (let i in SOCKET_LIST) {
+        //                 SOCKET_LIST[i].emit('addToChat', 'white', "Game starts in 5 seconds.");
+        //             }
+        //         }
+        //         timerStarted = true;
+        //     }
+        // }
     })
 
     socket.on('autofill', function(chat) {
