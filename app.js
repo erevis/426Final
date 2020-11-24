@@ -30,6 +30,7 @@ var playing = false
 var global_time = 0;
 var connectCnt = 0;
 var readyCnt = 0;
+var timer;
 
 var Bullet = function (x, y, dir, spd) {
     let bullet = {
@@ -196,14 +197,21 @@ io.sockets.on('connection', function (socket) {
     socket.on('readyUp', function () {
         readyCnt++;
         io.sockets.emit('readyCnt', readyCnt, connectCnt);
-        if (!playing){
-            setTimeout(function() {
-                startGame(io.sockets)
-            }, 5000)
-            for (let i in SOCKET_LIST) {
-                SOCKET_LIST[i].emit('addToChat', 'white', "Game starts in 5 seconds.");
+        if (!playing) {
+            if (readyCnt == connectCnt) {
+                clearTimeout(timer);
+                // console.log("cleared")
+                playing = true
+                startGame(io.sockets);
+            } else {
+                timer = setTimeout(function() {
+                    playing = true
+                    startGame(io.sockets);
+                }, 5000)
+                for (let i in SOCKET_LIST) {
+                    SOCKET_LIST[i].emit('addToChat', 'white', "Game starts in 5 seconds.");
+                }
             }
-            playing = true
         }
     })
 
@@ -274,6 +282,7 @@ function startGame(sct) {
                     SOCKET_LIST[i].emit('addToChat', 'white', "Game Over, " + winner.user + " wins.")
                 }
             }
+            sct.emit('gameEnd')
             readyCnt = 0;
             sct.emit('readyCnt', readyCnt, connectCnt);
             clearInterval(this)

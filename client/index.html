@@ -240,7 +240,12 @@
         socket.on('oneWin', function(name){
             _wins++
             playerWins.innerHTML = name + " Wins: " + _wins
-            connect.innerHTML.substring(0,1) = 0;
+        })
+
+        socket.on('gameEnd', function() {
+            let val = 0 + " ";
+            val += connect.innerHTML.substring(2,connect.innerHTML.length)
+            connect.innerHTML = val;
         })
 
         // Game Page Elements
