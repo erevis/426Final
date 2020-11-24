@@ -26,7 +26,7 @@ var PLAYER_LIST = {};
 let chosenColors = [];
 var bullet_list = [];
 var powerUp_list = [];
-
+var playing = false
 var global_time = 0;
 
 var Bullet = function (x, y, dir, spd) {
@@ -189,15 +189,12 @@ io.sockets.on('connection', function (socket) {
     })
 
     socket.on('readyUp', function () {
-        player.ready = true
-        let ready = true
-        for (var p in PLAYER_LIST) {
-            if (!PLAYER_LIST[p].ready) {
-                ready = false
+        if (!playing){
+            setTimeout(startGame, 5000)
+            for (let i in SOCKET_LIST) {
+                SOCKET_LIST[i].emit('addToChat', 'white', "Game starts in 5 seconds.");
             }
-        }
-        if (ready) {
-            startGame()
+            playing = true
         }
     })
 })
@@ -256,6 +253,7 @@ function startGame() {
                 }
             }
             clearInterval(this)
+            playing = false
             resetGame(winner)
         }
 
