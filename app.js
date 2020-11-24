@@ -108,43 +108,51 @@ io.sockets.on('connection', function (socket) {
     var player = Player(socket.id);
     PLAYER_LIST[socket.id] = player;
 
+
     socket.on('signIn', function (data, clr) {
-        for (var p in PLAYER_LIST) {
-            if (data.Usr == PLAYER_LIST[p].user) {
-                return socket.emit('signInRes', { result: false })
-            }
-        }
-        Database.correctPass(data, function (res) {
-            if (res) {
-                player.user = data.Usr;
-                player.color = clr;
-                socket.emit('signInRes', { result: true }, player, PLAYER_LIST)
-                Database.getWins(player.user, (res) => {
-                    socket.emit('newWins', player.user, res)
-                })
+        // let result = false
+        // for (var p in PLAYER_LIST) {
+        //     if (data.Usr == PLAYER_LIST[p].user) {
+        //         console.log('a')
+        //         socket.emit('signInRes', { result: false })
+        //         result = true
+        //     }
+        // }
+        // if (result) {
+            Database.correctPass(data, function (res) {
+                if (res) {
+                    player.user = data.Usr;
+                    player.color = clr;
+                    socket.emit('signInRes', { result: true }, player, PLAYER_LIST)
+                    Database.getWins(player.user, (res) => {
+                        socket.emit('newWins', player.user, res)
+                    })
 
+                } else {
+                    socket.emit('signInRes', { result: false })
+                }
+            })
+        //}
+
+    })
+
+
+    socket.on('signUp', function (data) {
+        Database.takenUser(data, function (res) {
+            if (res) {
+                socket.emit('signUpRes', { result: false })
             } else {
-                socket.emit('signInRes', {result:false})
+                Database.addUser(data, function () {
+                    socket.emit('signUpRes', { result: true });
+                });
+                player.user = data.Usr;
             }
         })
     })
 
-    socket.on('signUp', function(data) {
-        Database.takenUser(data, function(res) {
+    socket.on('removeAct', function (data) {
+        Database.deleteUser(data, function (res) {
             if (res) {
-                socket.emit('signUpRes', {result:false})
-            } else {
-                Database.addUser(data, function() {
-					socket.emit('signUpRes', {result:true});					
-				});
-                player.user = data.Usr;
-            }
-        })
-    })
-
-    socket.on('removeAct', function(data) {
-        Database.deleteUser(data, function(res){
-            if (res){
                 socket.emit('removeActRes', res)
             }
         });
@@ -286,9 +294,9 @@ function startGame() {
         }
         for (var p in powerUp_list) {
             var power = powerUp_list[p];
-            for(var j in PLAYER_LIST) {
+            for (var j in PLAYER_LIST) {
                 var player = PLAYER_LIST[j];
-                if (distance(power.x, power.y, player.x, player.y) <=25) {
+                if (distance(power.x, power.y, player.x, player.y) <= 25) {
                     player.powerUp = power.type;
                     delete powerUp_list[p];
                 }
@@ -310,7 +318,7 @@ function startGame() {
 
         for (var i in SOCKET_LIST) {
             var socket = SOCKET_LIST[i];
-            let package = { players: player_package, bullets: bullet_package, powerUps: powerUp_package};
+            let package = { players: player_package, bullets: bullet_package, powerUps: powerUp_package };
             socket.emit('newPostions', package);
         }
     }, 20)
@@ -373,8 +381,8 @@ function getBulletStart() {
 }
 
 function getPowerUpStart() {
-    let options =  Math.floor(Math.random() * Math.floor(2));
-    switch(options) {
+    let options = Math.floor(Math.random() * Math.floor(2));
+    switch (options) {
         case 0:
             return {
                 x: Math.random() * (750 - 1) + 1,

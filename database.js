@@ -34,11 +34,14 @@ Database.addUser = function(data, callback) {
 	_database.wins.insert({username:data.Usr,wins:0})
 }
 
-Database.deleteUser = function(data) {
+Database.deleteUser = function(data, callback) {
     _database.account.remove({username:data.Usr, password:data.Pas}, function(err, res){
 		if (err) throw err
-		callback(res)
-	})
+		if (res)
+			callback(true)
+		else
+			callback(false)
+		})
 	_database.wins.remove({username:data.Usr})
 }
 
