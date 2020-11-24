@@ -4,10 +4,11 @@
 </head>
 
 <body>
-    <!-- <div id = "info">🛈</div>
+    <button id = "info">🛈</button>
     <div id= "infocard" >
-        sdf;lkdsfjglfdsjkgjfds;gdfjgkjfg;lkdsj;lkgjfdglkds
-    </div> -->
+        Welcome to dodgeball. Avoid the black circles. Collect stars for abilities. Blue stars let you click to teleport.
+        Purple stars let you kill all black circles around you. Last alive wins!
+    </div>
     <div id="login">
         <label for="inputUser">Username</label>
         <input id="inputUser" type="text"> </input> <br>
@@ -84,11 +85,13 @@
 
         let playerWins = document.getElementById("playerWins")
         let infocard = document.getElementById("infocard")
+        let _wins
 
 
-        // infocard.onmouseenter = function(){
-        //     infocard.classList.add('infoactive')
-        // }
+        document.getElementById("info").onclick = function(){
+            console.log('a')
+            infocard.classList.toggle('infoactive')
+        }
 
 
         // Send Username and Password to the Server for signing up and signing in
@@ -147,8 +150,8 @@
             }
         })
         
-        socket.on('removeActRes', function (data) {
-            if (data.result) {
+        socket.on('removeActRes', function (result) {
+            if (result) {
                 sucSignUp.style.display = 'none';
                 failSignUp.style.display = 'none';
                 failSignIn.style.display = 'none';
@@ -164,7 +167,13 @@
         })
 
         socket.on('newWins', function(name, wins){
-            playerWins.innerHTML = name + " Wins: " + wins
+            _wins = wins
+            playerWins.innerHTML = name + " Wins: " + _wins
+        })
+
+        socket.on('oneWin', function(name){
+            _wins++
+            playerWins.innerHTML = name + " Wins: " + _wins
         })
 
         // Game Page Elements

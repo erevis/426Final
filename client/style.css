@@ -207,15 +207,23 @@ div {
     font-size: 30px;
     color: white;
     text-align: center;
+    border: none;
 }
 
 .infoactive{
-    display: inline;
+    display: none;
 }
 
 #infocard{
     background-color: white;
     opacity: .6;
+    position: absolute;
+    top: 40px;
+    left: 40px;
+    width: 300px;
+    height: 300px;
+    border-radius: 5px;
+    border: 5px solid grey;
 }
 
 p{

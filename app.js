@@ -110,29 +110,19 @@ io.sockets.on('connection', function (socket) {
 
 
     socket.on('signIn', function (data, clr) {
-        // let result = false
-        // for (var p in PLAYER_LIST) {
-        //     if (data.Usr == PLAYER_LIST[p].user) {
-        //         console.log('a')
-        //         socket.emit('signInRes', { result: false })
-        //         result = true
-        //     }
-        // }
-        // if (result) {
-            Database.correctPass(data, function (res) {
-                if (res) {
-                    player.user = data.Usr;
-                    player.color = clr;
-                    socket.emit('signInRes', { result: true }, player, PLAYER_LIST)
-                    Database.getWins(player.user, (res) => {
-                        socket.emit('newWins', player.user, res)
-                    })
+        Database.correctPass(data, function (res) {
+            if (res) {
+                player.user = data.Usr;
+                player.color = clr;
+                socket.emit('signInRes', { result: true }, player, PLAYER_LIST)
+                Database.getWins(player.user, (res) => {
+                    socket.emit('newWins', player.user, res)
+                })
 
-                } else {
-                    socket.emit('signInRes', { result: false })
-                }
-            })
-        //}
+            } else {
+                socket.emit('signInRes', { result: false })
+            }
+        })
 
     })
 
@@ -147,14 +137,12 @@ io.sockets.on('connection', function (socket) {
                 });
                 player.user = data.Usr;
             }
-        })
+        })  
     })
 
     socket.on('removeAct', function (data) {
         Database.deleteUser(data, function (res) {
-            if (res) {
-                socket.emit('removeActRes', res)
-            }
+            socket.emit('removeActRes', res)
         });
     })
 
@@ -327,11 +315,10 @@ function startGame() {
 function resetGame(winner) {
     if (winner != null) {
         Database.updateWins(winner.user, function () {
-            for (var s in SOCKET_LIST) {
-                Database.getWins(PLAYER_LIST[s].user, (res) => {
-                    SOCKET_LIST[s].emit('newWins', PLAYER_LIST[s].user, res)
-                })
-
+            for (var p in PLAYER_LIST) {
+                if (PLAYER_LIST[p] == winner){
+                    SOCKET_LIST[p].emit('oneWin', winner.user)
+                }
             }
         })
     }
@@ -409,4 +396,3 @@ Object.size = function (obj) {
     }
     return size;
 }
-
