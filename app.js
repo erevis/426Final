@@ -31,6 +31,7 @@ var global_time = 0;
 var connectCnt = 0;
 var readyCnt = 0;
 var timer;
+var timerStarted = false;
 
 var Bullet = function (x, y, dir, spd) {
     let bullet = {
@@ -199,18 +200,23 @@ io.sockets.on('connection', function (socket) {
         io.sockets.emit('readyCnt', readyCnt, connectCnt);
         if (!playing) {
             if (readyCnt == connectCnt) {
+                timerStarted = false;
                 clearTimeout(timer);
                 // console.log("cleared")
-                playing = true
+                playing = true;
                 startGame(io.sockets);
             } else {
                 timer = setTimeout(function() {
-                    playing = true
+                    playing = true;
+                    timerStarted = false;
                     startGame(io.sockets);
                 }, 5000)
-                for (let i in SOCKET_LIST) {
-                    SOCKET_LIST[i].emit('addToChat', 'white', "Game starts in 5 seconds.");
+                if (!timerStarted) {
+                    for (let i in SOCKET_LIST) {
+                        SOCKET_LIST[i].emit('addToChat', 'white', "Game starts in 5 seconds.");
+                    }
                 }
+                timerStarted = true;
             }
         }
     })
