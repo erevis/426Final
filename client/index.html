@@ -21,7 +21,7 @@
         <br>
         <label for="colors">Pick a color: </label>
         <select name="colors" id="colors" style='width: 100px'></select>
-        <p id='sucsignup' style='color: #32CD32; display: none; margin-bottom: -5px'>Successfully created<br>account, Log in.</p>
+        <p id='sucsignup' style='color: #208020; display: none; margin-bottom: -5px'>Successfully created<br>account, Log in.</p>
         <p id='failsignup' style='color: red; display: none; margin-bottom: -5px'>Error creating account, <br>Try again later.</p>
         <p id='failsignin' style='color: red; display: none; margin-bottom: -5px'>Error signing in, <br>Try creating an account first.</p>
         <p id='delacct' style='color: #ffa500; display: none; margin-bottom: -5px'>Account deleted.</p>
@@ -34,6 +34,7 @@
             <div id=gameContainer>
                 <div id="chatText" style="width:150px;height:499.5px;overflow-y:scroll;"></div>
                 <canvas id ="canv" style='border:1px solid #000000;'></canvas>
+                <span id='count'>0 / 0 ready</span>
                 <button id="readyButton">
                     Ready
                 </button>
@@ -89,12 +90,19 @@
         let _wins
         let chat = document.getElementById('chatInput')
         let autoFill = document.getElementById('autofill')
+        let connect = document.getElementById('count');
 
         document.getElementById("info").onclick = function() {
-            console.log('a')
             infocard.classList.toggle('infoactive')
         }
 
+        socket.on('connectCnt', function(rdy, cnt) {
+            connect.innerHTML = rdy + " / " + cnt + " ready";
+        });
+
+        socket.on('readyCnt', function(rdy, cnt) {
+            connect.innerHTML = rdy + " / " + cnt + " ready";
+        });
 
         // Send Username and Password to the Server for signing up and signing in
         signIn.onclick = function () {
@@ -125,7 +133,6 @@
         socket.on('autofillres', function(data) {
             closeSuggestions();
             let oldContainer = document.getElementsByClassName('autofillitems');
-            // console.log(autoFill.childNodes[3])
             if (typeof(oldContainer) != 'undefined' && oldContainer != null)
                 autoFill.removeChild[oldContainer];
 
@@ -233,6 +240,7 @@
         socket.on('oneWin', function(name){
             _wins++
             playerWins.innerHTML = name + " Wins: " + _wins
+            connect.innerHTML.substring(0,1) = 0;
         })
 
         // Game Page Elements

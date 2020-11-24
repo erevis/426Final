@@ -28,6 +28,8 @@ var bullet_list = [];
 var powerUp_list = [];
 
 var global_time = 0;
+var connectCnt = 0;
+var readyCnt = 0;
 
 var Bullet = function (x, y, dir, spd) {
     let bullet = {
@@ -100,8 +102,10 @@ var PowerUp = function (x, y, type) {
 
 var io = require('socket.io')(serv, {})
 io.sockets.on('connection', function (socket) {
-    socket.emit('updateColors', PLAYER_LIST, chosenColors);
+    connectCnt++;
+    io.sockets.emit('connectCnt', readyCnt, connectCnt);
 
+    socket.emit('updateColors', PLAYER_LIST, chosenColors);
 
     socket.id = Math.random()
     SOCKET_LIST[socket.id] = socket;
@@ -118,7 +122,6 @@ io.sockets.on('connection', function (socket) {
                 Database.getWins(player.user, (res) => {
                     socket.emit('newWins', player.user, res)
                 })
-
             } else {
                 socket.emit('signInRes', { result: false })
             }
@@ -147,6 +150,8 @@ io.sockets.on('connection', function (socket) {
     })
 
     socket.on('disconnect', function () {
+        connectCnt--;
+        io.sockets.emit('connectCnt', readyCnt, connectCnt);
         chosenColors.pop(PLAYER_LIST[socket.id].color);
         delete SOCKET_LIST[socket.id];
         delete PLAYER_LIST[socket.id];
@@ -190,6 +195,8 @@ io.sockets.on('connection', function (socket) {
 
     socket.on('readyUp', function () {
         player.ready = true
+        readyCnt++;
+        io.sockets.emit('readyCnt', readyCnt, connectCnt);
         let ready = true
         for (var p in PLAYER_LIST) {
             if (!PLAYER_LIST[p].ready) {
@@ -197,7 +204,7 @@ io.sockets.on('connection', function (socket) {
             }
         }
         if (ready) {
-            startGame()
+            startGame(io.sockets)
         }
     })
 
@@ -215,7 +222,7 @@ io.sockets.on('connection', function (socket) {
     })
 })
 
-function startGame() {
+function startGame(sct) {
     for (var p in PLAYER_LIST) {
         PLAYER_LIST[p].playing = true
     }
@@ -268,6 +275,8 @@ function startGame() {
                     SOCKET_LIST[i].emit('addToChat', 'white', "Game Over, " + winner.user + " wins.")
                 }
             }
+            readyCnt = 0;
+            sct.emit('readyCnt', readyCnt, connectCnt);
             clearInterval(this)
             resetGame(winner)
         }
